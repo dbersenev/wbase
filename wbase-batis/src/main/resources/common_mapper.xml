@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="common">
+    <sql id="pagedRestrictions">
+        <if test="!restriction.orders.isEmpty()">
+            order by
+            <foreach collection="restriction.orders" item="item" index="key" separator=" , ">
+                ${key} ${item.name()}
+            </foreach>
+        </if>
+    </sql>
+
+    <sql id="pagedFilters">
+        <if test="!restriction.filters.isEmpty()">
+            AND
+            <foreach collection="restriction.filters.entrySet()" item="item" index="key" separator=" AND " open="("
+                     close=")">
+                upper(cast(${key} as char(100))) like upper('${item}%')
+            </foreach>
+        </if>
+    </sql>
+
+    <sql id="openExpressionOracle">
+        SELECT a.* FROM (SELECT b.*, rownum b_rownum FROM (select
+    </sql>
+
+    <sql id="closeExpressionOracle">
+        <bind name="start_pos" value="restriction.start?(restriction.start+1):0"/>
+        <bind name="end_pos" value="restriction.offset?(restriction.start+restriction.offset+1):null"/>
+        ) b
+        <where>
+          <if test="restriction.offset">
+            <![CDATA[rownum < #{end_pos}]]>
+          </if>
+        </where>
+        <![CDATA[ ) a WHERE b_rownum >= #{start_pos}]]>
+    </sql>
+
+    <sql id="openExpressionDB2">
+        SELECT a.* FROM (SELECT rownumber() OVER (<include refid="common.pagedRestrictions"/>) as ROW_NEXT,
+    </sql>
+    <sql id="closeExpressionDB2">
+        <bind name="start_pos" value="restriction.start?(restriction.start+1):0"/>
+        <bind name="end_pos" value="restriction.offset?(restriction.start+restriction.offset+1):null"/>
+        ) as a
+        <where>
+            <if test="restriction.offset">
+                ROW_NEXT BETWEEN #{start_pos} AND #{end_pos}
+            </if>
+            <if test="!restriction.offset">
+                <![CDATA[ROW_NEXT >= #{start_pos}]]>
+            </if>
+        </where>
+    </sql>
+
+    <sql id="derbyPagingBlock">
+        <if test="restriction.start != 0">
+            offset #{restriction.start} ROWS
+        </if>
+
+        <if test="restriction.offset != 0">
+            fetch next #{restriction.offset} rows only
+        </if>
+    </sql>
+
+    <sql id="bySpec">
+        <choose>
+            <when test="_databaseId == 'oracle'">
+                <include refid="common.openExpressionOracle"/>
+            </when>
+            <when test="_databaseId == 'db2'">
+                <include refid="common.openExpressionDB2"/>
+            </when>
+            <when test="_databaseId == 'derby'">
+                select
+            </when>
+        </choose>
+        <include refid="selectCommon"/>
+        <include refid="specCommon"/>
+        <if test="_databaseId != 'db2'">
+            <include refid="common.pagedRestrictions"/>
+        </if>
+        <choose>
+            <when test="_databaseId == 'oracle'">
+                <include refid="common.closeExpressionOracle"/>
+            </when>
+            <when test="_databaseId == 'derby'">
+                <include refid="common.derbyPagingBlock"/>
+            </when>
+            <when test="_databaseId == 'db2'">
+                <include refid="common.closeExpressionDB2"/>
+            </when>
+        </choose>
+
+    </sql>
+
+    <sql id="bySpecCount">
+        select count(*) from <include refid="fromCommon"/>
+        <include refid="specCommon"/>
+    </sql>
+</mapper>
