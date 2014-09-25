@@ -29,6 +29,9 @@
     <packaging>jar</packaging>
     <version>${wbase_version}</version>
 
+    <name>wbase-batis-spring</name>
+    <description>wbase-batis integration with Spring</description>
+
     <dependencies>
         <dependency>
             <groupId>org.molasdin</groupId>

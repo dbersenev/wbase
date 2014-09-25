@@ -13,6 +13,9 @@
     <packaging>jar</packaging>
     <version>${wbase_version}</version>
 
+    <name>wbase-hibernate</name>
+    <description>wbase integration with Hibernate using Spring</description>
+
     <dependencies>
 
         <dependency>

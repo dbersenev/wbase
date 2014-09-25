@@ -28,4 +28,7 @@
     <artifactId>wbase</artifactId>
     <packaging>jar</packaging>
     <version>${wbase_version}</version>
+
+    <name>wbase</name>
+    <description>Collection of reusable components</description>
 </project>

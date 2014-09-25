@@ -29,6 +29,9 @@
     <packaging>jar</packaging>
     <version>${wbase_version}</version>
 
+    <name>wbase-jsf-spring</name>
+    <description>wbase-jsf integration with Spring</description>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -50,7 +53,7 @@
 
         <dependency>
             <groupId>org.molasdin</groupId>
-            <artifactId>wbase-web</artifactId>
+            <artifactId>wbase-jsf</artifactId>
             <version>${wbase_version}</version>
         </dependency>
     </dependencies>

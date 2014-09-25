@@ -17,6 +17,10 @@
     </modules>
     <packaging>pom</packaging>
 
+    <name>WBase parent</name>
+    <description>WBase parent pom</description>
+    <url>https://github.com/molasdin/wbase</url>
+
     <developers>
         <developer>
             <id>molasdin</id>
@@ -24,6 +28,10 @@
             <email>molasdin@outlook.com</email>
         </developer>
     </developers>
+
+    <scm>
+        <url>https://github.com/molasdin/wbase.git</url>
+    </scm>
 
     <licenses>
         <license>

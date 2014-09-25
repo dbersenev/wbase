@@ -29,6 +29,9 @@
     <packaging>jar</packaging>
     <version>${wbase_version}</version>
 
+    <name>wbase-batis</name>
+    <description>wbase integration with MyBatis</description>
+
     <dependencies>
         <dependency>
             <groupId>org.mybatis</groupId>
