@@ -44,10 +44,9 @@ public class BasicOrmCursor<T> extends CommonOrmCursor<T, DetachedCriteria> {
         }
     }
 
-    @Transactional(readOnly = true)
     @Override
     @SuppressWarnings("unchecked")
-    public List<T> data() {
+    public List<T> dataCallback(Session session) {
         DetachedCriteria criteria = searchSpecification().query();
         List<Pair<String, org.molasdin.wbase.storage.Order>> orders = orders();
         if(!orders.isEmpty()){
@@ -59,16 +58,14 @@ public class BasicOrmCursor<T> extends CommonOrmCursor<T, DetachedCriteria> {
         }
 
         criteria.add(populateFilters(searchSpecification().filterModes()));
-        Session session = session();
         return postProcessData((List<T>)criteria.getExecutableCriteria(session)
                 .setFirstResult(calculatedRowOffset())
                 .setMaxResults(pageSize())
                 .list());
     }
 
-    @Transactional(readOnly = true)
     @Override
-    public long totalRecords() {
+    public Long totalCallback(Session session) {
         DetachedCriteria criteria = searchSpecification().query();
         if(searchSpecification().distinctProperty() != null){
             criteria.setProjection(Projections.countDistinct(searchSpecification().distinctProperty()));
@@ -76,7 +73,6 @@ public class BasicOrmCursor<T> extends CommonOrmCursor<T, DetachedCriteria> {
             criteria.setProjection(Projections.rowCount());
         }
         criteria.add(populateFilters(searchSpecification().filterModes()));
-        Session session = session();
         return (Long)criteria.getExecutableCriteria(session).uniqueResult();
     }
 
@@ -100,6 +96,7 @@ public class BasicOrmCursor<T> extends CommonOrmCursor<T, DetachedCriteria> {
         BasicOrmCursor<T> newSearchResult = new BasicOrmCursor<T>();
         newSearchResult.setSearchConfiguration(searchSpecification());
         newSearchResult.setSessionFactory(sessionFactory());
+        newSearchResult.setTxManager(this.txTemplate().getTransactionManager());
         return newSearchResult;
     }
 }

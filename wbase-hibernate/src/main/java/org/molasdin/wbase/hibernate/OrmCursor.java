@@ -20,6 +20,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.molasdin.wbase.storage.Cursor;
 import org.molasdin.wbase.storage.SearchConfiguration;
+import org.springframework.transaction.PlatformTransactionManager;
 
 
 public interface OrmCursor<T, U> extends Cursor<T> {
@@ -27,6 +28,6 @@ public interface OrmCursor<T, U> extends Cursor<T> {
     SearchConfiguration<T,U> searchSpecification();
     void setSessionFactory(SessionFactory sessionFactory);
     SessionFactory sessionFactory();
-    Session session();
+    void setTxManager(PlatformTransactionManager txManager);
     String translateProperty(String original);
 }

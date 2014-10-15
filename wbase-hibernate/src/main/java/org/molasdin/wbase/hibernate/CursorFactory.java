@@ -26,7 +26,7 @@ import java.util.Map;
 /**
  * Created by dbersenev on 18.03.14.
  */
-public interface SearchResultFactory {
+public interface CursorFactory {
     public <T> OrmCursor<T, DetachedCriteria> createSearchResult(SearchConfiguration<T, DetachedCriteria> spec);
     public <T> OrmCursor<T, Pair<Pair<String, String>, Map<String, Object>>> createQuerySearchResult(SearchConfiguration<T,
                 Pair<Pair<String, String>,

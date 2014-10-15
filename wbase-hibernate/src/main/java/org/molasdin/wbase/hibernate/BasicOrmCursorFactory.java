@@ -16,26 +16,42 @@
 
 package org.molasdin.wbase.hibernate;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.DetachedCriteria;
+import org.molasdin.wbase.hibernate.result.BasicFilteredOrmCursor;
+import org.molasdin.wbase.hibernate.result.BasicOrmCursor;
+import org.molasdin.wbase.hibernate.result.BasicOrmQueryCursor;
 import org.molasdin.wbase.storage.SearchConfiguration;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import java.util.Collection;
 import java.util.Map;
 
 
-public class BasicOrmSearchResultFactory implements SearchResultFactory, ApplicationContextAware {
+public class BasicOrmCursorFactory implements CursorFactory, ApplicationContextAware {
 
     private ApplicationContext ctx;
+    private SessionFactory sessionFactory;
+    private PlatformTransactionManager transactionManager;
 
     private String searchResultName;
 
     private String querySearchResultName;
 
     private String filteredSearchResultName;
+
+    public void setSessionFactory(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
+    }
+
+    public void setTransactionManager(PlatformTransactionManager transactionManager) {
+        this.transactionManager = transactionManager;
+    }
 
     public void setSearchResultName(String searchResultName) {
         this.searchResultName = searchResultName;
@@ -54,42 +70,64 @@ public class BasicOrmSearchResultFactory implements SearchResultFactory, Applica
         this.ctx = applicationContext;
     }
 
+    private void initCursor(OrmCursor<?, ?> cursor) {
+        cursor.setSessionFactory(sessionFactory);
+        PlatformTransactionManager tmp = transactionManager;
+        if(tmp == null){
+            tmp = ctx.getBean("txManager", PlatformTransactionManager.class);
+        }
+        cursor.setTxManager(tmp);
+    }
+
     @Override
     public <T> OrmCursor<T, DetachedCriteria> createSearchResult(SearchConfiguration<T, DetachedCriteria> spec) {
-        OrmCursor<T, DetachedCriteria> tmp = newSearchResult();
+        OrmCursor<T, DetachedCriteria> tmp = newCursor();
         tmp.setSearchConfiguration(spec);
+        initCursor(tmp);
         return tmp;
     }
 
     @Override
     public <T> OrmCursor<T, Pair<Pair<String, String>, Map<String, Object>>> createQuerySearchResult(SearchConfiguration<T,
-                Pair<Pair<String, String>,
-                        Map<String, Object>>> spec) {
-        OrmCursor<T, Pair<Pair<String, String>, Map<String, Object>>> tmp = newQuerySearchResult();
+            Pair<Pair<String, String>,
+                    Map<String, Object>>> spec) {
+        OrmCursor<T, Pair<Pair<String, String>, Map<String, Object>>> tmp = newQueryCursor();
         tmp.setSearchConfiguration(spec);
+        initCursor(tmp);
         return tmp;
     }
 
     @Override
     public <T, U> FilteredOrmCursor<U> createCollectionSearchResult(T owner, Collection<U> collection) {
-        FilteredOrmCursor<U> result = newFilteredSearchResult();
+        FilteredOrmCursor<U> result = newFilteredCursor();
         result.setOwner(owner);
         result.setCollectionProxy(collection);
+        initCursor(result);
         return result;
     }
 
     @SuppressWarnings("unchecked")
-    public <T> OrmCursor<T, DetachedCriteria> newSearchResult() {
-        return ctx.getBean(searchResultName, OrmCursor.class);
+    public <T> OrmCursor<T, DetachedCriteria> newCursor() {
+        OrmCursor<T, DetachedCriteria> cursor = bean(searchResultName, OrmCursor.class);
+        return cursor != null ? cursor : new BasicOrmCursor<T>();
     }
 
     @SuppressWarnings("unchecked")
-    public <U> FilteredOrmCursor<U> newFilteredSearchResult() {
-        return ctx.getBean(filteredSearchResultName, FilteredOrmCursor.class);
+    public <U> FilteredOrmCursor<U> newFilteredCursor() {
+        FilteredOrmCursor<U> cursor = bean(filteredSearchResultName, FilteredOrmCursor.class);
+        return cursor != null ? cursor : new BasicFilteredOrmCursor<U>();
     }
 
     @SuppressWarnings("unchecked")
-    public <T> OrmCursor<T, Pair<Pair<String, String>, Map<String, Object>>> newQuerySearchResult() {
-        return ctx.getBean(querySearchResultName, OrmCursor.class);
+    public <T> OrmCursor<T, Pair<Pair<String, String>, Map<String, Object>>> newQueryCursor() {
+        OrmCursor<T, Pair<Pair<String, String>, Map<String, Object>>> cursor = bean(querySearchResultName, OrmCursor.class);
+        return cursor != null ? cursor : new BasicOrmQueryCursor<T>();
+    }
+
+    private <U> U bean(String name, Class<U> clazz) {
+        if (StringUtils.isNotBlank(name) && ctx.containsBean(name)) {
+            return ctx.getBean(name, clazz);
+        }
+        return null;
     }
 }

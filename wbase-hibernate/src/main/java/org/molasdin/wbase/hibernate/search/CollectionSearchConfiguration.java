@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Bersenev Dmitry molasdin@outlook.com
+ * Copyright 2014 Bersenev Dmitry molasdin@outlook.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,26 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.hibernate;
+package org.molasdin.wbase.hibernate.search;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.molasdin.wbase.storage.Cursor;
+import org.molasdin.wbase.storage.AbstractSearchConfiguration;
 
 import java.util.Collection;
 
+/**
+ * Created by dbersenev on 07.10.2014.
+ */
+public class CollectionSearchConfiguration<T> extends AbstractSearchConfiguration<T, Pair<?, Collection<T>>> {
 
-public interface FilteredOrmCursor<T> extends OrmCursor<T, Pair<?, Collection<T>>> {
-    void setOwner(Object owner);
-    void setCollectionProxy(Collection<T> collectionProxy);
+    private Pair<?, Collection<T>> data;
+
+    public CollectionSearchConfiguration(Pair<?, Collection<T>> data) {
+        this.data = data;
+    }
+
+    @Override
+    public Pair<?, Collection<T>> query() {
+        return data;
+    }
 }

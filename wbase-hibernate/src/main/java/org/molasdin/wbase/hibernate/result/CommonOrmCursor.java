@@ -22,6 +22,13 @@ import org.molasdin.wbase.hibernate.OrmCursor;
 import org.molasdin.wbase.storage.AbstractCursor;
 import org.molasdin.wbase.storage.Cursor;
 import org.molasdin.wbase.storage.SearchConfiguration;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
+
+import java.util.List;
 
 /**
  * Created by dbersenev on 24.02.14.
@@ -31,6 +38,21 @@ public abstract class CommonOrmCursor<T, U> extends AbstractCursor<T> implements
     private SearchConfiguration<T,U> searchConfiguration;
 
     private SessionFactory sessionFactory;
+    private TransactionTemplate txTemplate;
+
+    public TransactionTemplate txTemplate() {
+        return txTemplate;
+    }
+
+    public void setTxManager(PlatformTransactionManager txManager) {
+        txTemplate = new TransactionTemplate(txManager);
+        configureTemplate(txTemplate);
+    }
+
+    protected void configureTemplate(TransactionTemplate template){
+        template.setReadOnly(true);
+        template.setIsolationLevel(Isolation.READ_UNCOMMITTED.value());
+    }
 
     public void setSearchConfiguration(SearchConfiguration<T, U> searchConfiguration) {
         this.searchConfiguration = searchConfiguration;
@@ -46,10 +68,6 @@ public abstract class CommonOrmCursor<T, U> extends AbstractCursor<T> implements
 
     public SessionFactory sessionFactory(){
         return sessionFactory;
-    }
-
-    public Session session(){
-        return sessionFactory.getCurrentSession();
     }
 
     public String translateProperty(String original){
@@ -68,4 +86,26 @@ public abstract class CommonOrmCursor<T, U> extends AbstractCursor<T> implements
     public Cursor<T> copy() {
         return null;
     }
+
+    public List<T> data(){
+        return txTemplate.execute(new TransactionCallback<List<T>>() {
+            @Override
+            public List<T> doInTransaction(TransactionStatus transactionStatus) {
+                return dataCallback(sessionFactory.getCurrentSession());
+            }
+        });
+    }
+
+    public long totalRecords(){
+        return txTemplate.execute(new TransactionCallback<Long>() {
+            @Override
+            public Long doInTransaction(TransactionStatus transactionStatus) {
+                Long result = totalCallback(sessionFactory.getCurrentSession());
+                return result != null?result:0;
+            }
+        });
+    }
+
+    public abstract List<T> dataCallback(Session session);
+    public abstract Long totalCallback(Session session);
 }

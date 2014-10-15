@@ -35,10 +35,9 @@ public class BasicOrmQueryCursor<T> extends CommonOrmCursor<T, Pair<Pair<String,
     private final static String ORDER_BY_CLAUSE = "%s %s";
     private final static String FILTER_PART = "upper(str(%s)) like upper('%s')";
 
-    @Transactional(readOnly = true)
     @Override
     @SuppressWarnings("unchecked")
-    public List<T> data() {
+    public List<T> dataCallback(Session session) {
         Pair<Pair<String,String>, Map<String,Object>> spec = searchSpecification().query();
         Pair<String,String> query = spec.getLeft();
         StrBuilder resultQuery = new StrBuilder();
@@ -59,7 +58,6 @@ public class BasicOrmQueryCursor<T> extends CommonOrmCursor<T, Pair<Pair<String,
             resultQuery.append(' ').append(builder.toString());
         }
 
-        Session session = session();
         int rowOffset = calculatedRowOffset();
 
         Query q = session.createQuery(resultQuery.toString());
@@ -72,9 +70,8 @@ public class BasicOrmQueryCursor<T> extends CommonOrmCursor<T, Pair<Pair<String,
                 .list());
     }
 
-    @Transactional(readOnly = true)
     @Override
-    public long totalRecords() {
+    public Long totalCallback(Session session) {
         Pair<Pair<String,String>, Map<String,Object>> spec = searchSpecification().query();
         StrBuilder query = new StrBuilder("select ");
         if(searchSpecification().distinctProperty() != null){
@@ -85,7 +82,6 @@ public class BasicOrmQueryCursor<T> extends CommonOrmCursor<T, Pair<Pair<String,
         query.append(' ');
         query.append(spec.getLeft().getRight());
         populateFilters(query, spec.getLeft().getRight(), searchSpecification().filterModes());
-        Session session = session();
         Query q = session.createQuery(query.toString());
         for(String param: spec.getRight().keySet()){
             q.setParameter(param, spec.getRight().get(param));

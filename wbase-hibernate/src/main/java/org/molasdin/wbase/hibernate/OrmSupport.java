@@ -45,6 +45,6 @@ public interface OrmSupport {
     <U> U invokeCriteriaForSingle(DetachedCriteria criteria, Class<U> clazz);
     <U> U invokeCriteriaForSingle(Criteria criteria, Class<U> clazz);
 
-    SearchResultFactory resultFactory();
+    CursorFactory resultFactory();
 
 }

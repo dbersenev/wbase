@@ -33,26 +33,11 @@
         </property>
 </bean>
 
-<bean id="ormSearchResult" class="org.molasdin.wbase.hibernate.result.BasicOrmCursor" scope="prototype">
-        <property name="sessionFactory" ref="sessionFactory"/>
-</bean>
-
-<bean id="querySearchResult" class="org.molasdin.wbase.hibernate.result.BasicOrmQueryCursor" scope="prototype">
-        <property name="sessionFactory" ref="sessionFactory"/>
-</bean>
-
-<bean id="filteredOrmSearchResult" class="org.molasdin.wbase.hibernate.result.BasicFilteredOrmCursor" scope="prototype">
-        <property name="sessionFactory" ref="sessionFactory"/>
-</bean>
-
-<bean id="searchResultFactory" class="org.molasdin.wbase.hibernate.BasicOrmSearchResultFactory">
-        <property name="searchResultName" value="ormSearchResult"/>
-        <property name="querySearchResultName" value="querySearchResult"/>
-        <property name="filteredSearchResultName" value="filteredOrmSearchResult"/>
-</bean>
+<bean id="cursorFactory" class="org.molasdin.wbase.hibernate.BasicOrmSearchResultFactory"/>
 
 <bean id="commonDao" class="org.molasdin.wbase.hibernate.BasicOrmSupport">
         <property name="sessionFactory" ref="sessionFactory"/>
+        <property name="cursorFactory" ref="cursorFactory"/>
 </bean>
 
 <bean id="simpleRepo" class="org.molasdin.wbase.hibernate.BasicOrmRepository">

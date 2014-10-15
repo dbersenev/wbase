@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Bersenev Dmitry molasdin@outlook.com
+ * Copyright 2014 Bersenev Dmitry molasdin@outlook.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.hibernate;
+package org.molasdin.wbase.transaction;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.molasdin.wbase.storage.Cursor;
-
-import java.util.Collection;
-
-
-public interface FilteredOrmCursor<T> extends OrmCursor<T, Pair<?, Collection<T>>> {
-    void setOwner(Object owner);
-    void setCollectionProxy(Collection<T> collectionProxy);
+/**
+ * Created by dbersenev on 15.10.2014.
+ */
+public interface TransactionRunnerFactory<T> {
+    TransactionRunner<T> createRunner();
 }

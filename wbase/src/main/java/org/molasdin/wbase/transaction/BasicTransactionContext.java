@@ -17,13 +17,31 @@
 package org.molasdin.wbase.transaction;
 
 /**
- * Created by molasdin on 1/22/14.
+ * Created by dbersenev on 15.10.2014.
  */
+public class BasicTransactionContext<T> implements TransactionContext<T> {
 
-/**
- * Allows running some code within transaction.
- * @param <T>
- */
-public interface Transactional<T> {
-    <U> U run(TransactionContext<T> context) throws Exception;
+    private T engineContext;
+
+    public BasicTransactionContext() {
+    }
+
+    public BasicTransactionContext(T engineContext) {
+        this.engineContext = engineContext;
+    }
+
+    @Override
+    public void rollback() {
+
+    }
+
+    @Override
+    public T engineContext() {
+        return engineContext;
+    }
+
+    @Override
+    public void runInner(Transactional<TransactionContext<T>> transactional) {
+
+    }
 }

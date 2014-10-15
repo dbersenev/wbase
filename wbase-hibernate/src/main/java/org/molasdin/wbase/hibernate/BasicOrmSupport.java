@@ -30,11 +30,11 @@ public class BasicOrmSupport implements OrmSupport {
 
     private SessionFactory sessionFactory;
 
-    private SearchResultFactory resultFactory;
+    private CursorFactory resultFactory;
 
 
 
-    public void setResultFactory(SearchResultFactory resultFactory) {
+    public void setCursorFactory(CursorFactory resultFactory) {
         this.resultFactory = resultFactory;
     }
 
@@ -103,7 +103,7 @@ public class BasicOrmSupport implements OrmSupport {
     }
 
     @Override
-    public SearchResultFactory resultFactory() {
+    public CursorFactory resultFactory() {
         return resultFactory;
     }
 

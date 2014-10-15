@@ -30,7 +30,7 @@ import java.util.Collection;
 import java.util.List;
 
 
-public class BasicFilteredOrmCursor<T> extends AbstractCursor<T> implements FilteredOrmCursor<T> {
+public class BasicFilteredOrmCursor<T> extends CommonOrmCursor<T, Pair<?, Collection<T>>> implements FilteredOrmCursor<T> {
 
     private final static String FILTER_ORDER = "this.%s %s";
     private final static String FILTER_FILTER = "upper(str(this.%s)) ilike %s%%";
@@ -54,12 +54,11 @@ public class BasicFilteredOrmCursor<T> extends AbstractCursor<T> implements Filt
         this.sessionFactory = sessionFactory;
     }
 
-    @Transactional
     @SuppressWarnings("unchecked")
     @Override
-    public List<T> data() {
+    public List<T> dataCallback(Session session) {
         StringBuilder builder = new StringBuilder();
-        session().buildLockRequest(LockOptions.NONE).lock(owner);
+        session.buildLockRequest(LockOptions.NONE).lock(owner);
         builder.append(populateFilters());
         builder.append(' ');
 
@@ -77,7 +76,6 @@ public class BasicFilteredOrmCursor<T> extends AbstractCursor<T> implements Filt
             builder.append(' ');
         }
 
-        Session session = session();
         return postProcessData((List<T>)session.createFilter(collectionProxy, builder.toString())
                 .setFirstResult(calculatedRowOffset())
                 .setMaxResults(pageSize())
@@ -94,19 +92,13 @@ public class BasicFilteredOrmCursor<T> extends AbstractCursor<T> implements Filt
         return query.toString();
     }
 
-    @Transactional
     @Override
-    public long totalRecords() {
+    public Long totalCallback(Session session) {
         StringBuilder builder = new StringBuilder();
         builder.append("select count(*) ");
         builder.append(populateFilters());
-        Session session = session();
         session.buildLockRequest(LockOptions.NONE).lock(owner);
         return (Long)session.createFilter(collectionProxy, builder.toString()).uniqueResult();
-    }
-
-    private Session session(){
-        return sessionFactory.getCurrentSession();
     }
 
     @Override
