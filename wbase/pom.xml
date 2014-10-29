@@ -21,16 +21,12 @@
     <parent>
         <artifactId>wbase-parent</artifactId>
         <groupId>org.molasdin</groupId>
-        <version>1.1</version>
+        <version>1.10-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>wbase</artifactId>
-    <packaging>pom</packaging>
-    <version>${wbase_version}</version>
-    <modules>
-        <module>../wbase-spring</module>
-    </modules>
+    <packaging>jar</packaging>
 
     <name>wbase</name>
     <description>Collection of reusable components</description>

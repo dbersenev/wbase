@@ -21,13 +21,12 @@
     <parent>
         <artifactId>wbase-parent</artifactId>
         <groupId>org.molasdin</groupId>
-        <version>1.1</version>
+        <version>1.10-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>wbase-batis-spring</artifactId>
     <packaging>jar</packaging>
-    <version>${wbase_version}</version>
 
     <name>wbase-batis-spring</name>
     <description>wbase-batis integration with Spring</description>
@@ -36,12 +35,12 @@
         <dependency>
             <groupId>org.molasdin</groupId>
             <artifactId>wbase-batis</artifactId>
-            <version>${wbase_version}</version>
+            <version>${parent.version}</version>
         </dependency>
         <dependency>
             <groupId>org.molasdin</groupId>
             <artifactId>wbase-spring</artifactId>
-            <version>${wbase_version}</version>
+            <version>${parent.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mybatis</groupId>
