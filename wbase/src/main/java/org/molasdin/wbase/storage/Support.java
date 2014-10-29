@@ -21,7 +21,7 @@ import org.molasdin.wbase.transaction.*;
 /**
  * Created by dbersenev on 15.10.2014.
  */
-public interface Support<T> {
+public interface Support<T extends Engine> {
     void setTransactionProviderFactory(TransactionProviderFactory<T> providerFactory);
     TransactionProviderFactory<T> transactionProviderFactory();
 

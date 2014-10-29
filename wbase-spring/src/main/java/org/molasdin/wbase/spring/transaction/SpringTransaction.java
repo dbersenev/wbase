@@ -18,8 +18,10 @@ package org.molasdin.wbase.spring.transaction;
 
 import org.molasdin.wbase.Source;
 import org.molasdin.wbase.transaction.AbstractTransaction;
+import org.molasdin.wbase.transaction.Engine;
 import org.molasdin.wbase.transaction.EngineFactory;
 import org.molasdin.wbase.transaction.Transaction;
+import org.molasdin.wbase.transaction.jdbc.JdbcEngine;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 
@@ -27,7 +29,7 @@ import org.springframework.transaction.TransactionStatus;
 /**
  * Created by dbersenev on 28.10.2014.
  */
-public class SpringTransaction<T> extends AbstractTransaction<T> {
+public class SpringTransaction<T extends Engine> extends AbstractTransaction<T> {
     private PlatformTransactionManager tx;
     private TransactionStatus status;
     private Source<TransactionStatus> statusSource;
@@ -68,6 +70,7 @@ public class SpringTransaction<T> extends AbstractTransaction<T> {
 
     @Override
     public void close() {
+        super.close();
         status.flush();
     }
 

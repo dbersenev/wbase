@@ -19,7 +19,7 @@ package org.molasdin.wbase.transaction;
 /**
  * Created by dbersenev on 28.10.2014.
  */
-public abstract class AbstractTransactionProvider<T> implements TransactionProvider<T> {
+public abstract class AbstractTransactionProvider<T extends Engine> implements TransactionProvider<T> {
     @Override
     public Transaction<T> newTransaction() {
         return newTransaction(new BasicTransactionDescriptor());

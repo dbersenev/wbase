@@ -19,7 +19,7 @@ package org.molasdin.wbase.transaction;
 /**
  * Created by dbersenev on 21.10.2014.
  */
-public interface TransactionProvider<T> {
+public interface TransactionProvider<T extends Engine> {
     Transaction<T> newTransaction();
     Transaction<T> newTransaction(TransactionIsolation isolation);
     Transaction<T> newTransaction(TransactionDescriptor descriptor);

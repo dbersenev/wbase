@@ -21,7 +21,7 @@ import org.molasdin.wbase.transaction.*;
 /**
  * Created by dbersenev on 15.10.2014.
  */
-public class BasicSupport<T> implements Support<T> {
+public class BasicSupport<T extends Engine> implements Support<T> {
     private TransactionProviderFactory<T> providerFactory;
 
     @Override

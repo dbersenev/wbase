@@ -25,7 +25,7 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 /**
  * Created by dbersenev on 28.10.2014.
  */
-public class SpringTransactionProvider<T> extends AbstractTransactionProvider<T> {
+public class SpringTransactionProvider<T extends Engine> extends AbstractTransactionProvider<T> {
     private PlatformTransactionManager tx;
     private EngineFactory<T> engineFactory;
 

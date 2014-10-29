@@ -87,4 +87,9 @@ public class BasicBatisEngine<M> implements BatisEngine<M> {
     public static<F> BatisEngine<F> of(SqlSession session, F mapper){
         return new BasicBatisEngine<F>(session, mapper);
     }
+
+    @Override
+    public void close() {
+
+    }
 }

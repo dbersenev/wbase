@@ -19,7 +19,7 @@ package org.molasdin.wbase.transaction;
 /**
  * Created by dbersenev on 16.10.2014.
  */
-public class BasicTransactionRunner<T> implements TransactionRunner<T> {
+public class BasicTransactionRunner<T extends Engine> implements TransactionRunner<T> {
     private TransactionIsolation isolation;
     private TransactionProvider<T> transactionProvider;
 

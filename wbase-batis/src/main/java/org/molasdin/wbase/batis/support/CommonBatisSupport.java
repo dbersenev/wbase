@@ -44,7 +44,9 @@ public class CommonBatisSupport<M> extends BasicSupport<BatisEngine<M>> implemen
     public void setSessionFactory(SqlSessionFactory factory){
         this.factory = factory;
     }
-
+    public SqlSessionFactory sessionFactory(){
+        return factory;
+    }
     @Override
     public TransactionProviderFactory<BatisEngine<M>> newDefaultFactory() {
         return new BatisTransactionProviderFactory<M>(factory, mapperClass);
@@ -52,10 +54,6 @@ public class CommonBatisSupport<M> extends BasicSupport<BatisEngine<M>> implemen
 
     public SqlSession session() {
         return factory.openSession();
-    }
-
-    public SqlSession session(boolean autoCommit) {
-        return factory.openSession(autoCommit);
     }
 
     public Class<M> mapperClass(){

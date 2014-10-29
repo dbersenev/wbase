@@ -17,12 +17,13 @@
 package org.molasdin.wbase.batis.support;
 
 import org.apache.ibatis.session.SqlSession;
+import org.molasdin.wbase.transaction.Engine;
 import org.molasdin.wbase.transaction.Transactional;
 
 /**
  * Created by dbersenev on 31.01.14.
  */
-public interface BatisEngine<M> {
+public interface BatisEngine<M> extends Engine {
     SqlSession session();
     M mapper();
     String columnByProperty(String property, String resultMap);

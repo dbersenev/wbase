@@ -20,6 +20,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
+import org.molasdin.wbase.transaction.Engine;
 
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,7 @@ import java.util.Map;
 /**
  * Created by dbersenev on 28.10.2014.
  */
-public interface HibernateEngine {
+public interface HibernateEngine extends Engine {
     Session session();
     <U> List<U> queryForList(String query, Map<String, ?> arguments, Class<U> clazz);
     <U> List<U> queryForList(Query query, Class<U> clazz);
@@ -40,5 +41,4 @@ public interface HibernateEngine {
 
     <U> U invokeCriteriaForSingle(DetachedCriteria criteria, Class<U> clazz);
     <U> U invokeCriteriaForSingle(Criteria criteria, Class<U> clazz);
-
 }

@@ -16,6 +16,7 @@
 
 package org.molasdin.wbase.spring.transaction;
 
+import org.molasdin.wbase.transaction.Engine;
 import org.molasdin.wbase.transaction.EngineFactory;
 import org.molasdin.wbase.transaction.TransactionProvider;
 import org.molasdin.wbase.transaction.TransactionProviderFactory;
@@ -25,7 +26,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 /**
  * Created by dbersenev on 28.10.2014.
  */
-public class SpringTransactionProviderFactory<T> implements TransactionProviderFactory<T> {
+public class SpringTransactionProviderFactory<T extends Engine> implements TransactionProviderFactory<T> {
     private PlatformTransactionManager tx;
     private EngineFactory<T> engineFactory;
 

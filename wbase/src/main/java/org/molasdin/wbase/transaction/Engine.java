@@ -16,9 +16,11 @@
 
 package org.molasdin.wbase.transaction;
 
+import java.io.Closeable;
+
 /**
- * Created by dbersenev on 28.10.2014.
+ * Created by dbersenev on 29.10.2014.
  */
-public interface EngineFactory<T extends Engine> {
-    T create();
+public interface Engine{
+    void close();
 }

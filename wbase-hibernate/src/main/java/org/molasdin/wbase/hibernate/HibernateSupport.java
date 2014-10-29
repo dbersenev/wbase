@@ -21,7 +21,7 @@ import org.hibernate.SessionFactory;
 import org.molasdin.wbase.storage.Support;
 
 
-public interface HibernateSupport extends Support<HibernateEngine> {
+public interface HibernateSupport extends Support<HibernateEngine>, HibernateEngine {
     SessionFactory factory();
     void setSessionFactory(SessionFactory factory);
 

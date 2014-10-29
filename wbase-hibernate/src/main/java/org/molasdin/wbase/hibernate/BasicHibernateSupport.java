@@ -16,13 +16,19 @@
 
 package org.molasdin.wbase.hibernate;
 
+import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.DetachedCriteria;
 import org.molasdin.wbase.spring.transaction.SpringTransactionProviderFactory;
 import org.molasdin.wbase.storage.BasicSupport;
 import org.molasdin.wbase.transaction.EngineFactory;
 import org.molasdin.wbase.transaction.TransactionProviderFactory;
 import org.springframework.transaction.PlatformTransactionManager;
+
+import java.util.List;
+import java.util.Map;
 
 
 public class BasicHibernateSupport extends BasicSupport<HibernateEngine> implements HibernateSupport {
@@ -67,7 +73,7 @@ public class BasicHibernateSupport extends BasicSupport<HibernateEngine> impleme
         return new SpringTransactionProviderFactory<HibernateEngine>(tx, new EngineFactory<HibernateEngine>() {
             @Override
             public HibernateEngine create() {
-                return new BasicHibernateEngine(sessionFactory.getCurrentSession());
+                return BasicHibernateSupport.this;
             }
         });
     }
@@ -78,5 +84,67 @@ public class BasicHibernateSupport extends BasicSupport<HibernateEngine> impleme
         }
     }
 
+    @Override
+    public Session session() {
+        return sessionFactory.getCurrentSession();
+    }
 
+    @Override
+    public <U> List<U> queryForList(String query, Map<String, ?> arguments, Class<U> clazz) {
+        Query q = session().createQuery(query);
+        addParameters(q, arguments);
+        return queryForList(q, clazz);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <U> List<U> queryForList(Query query, Class<U> clazz) {
+        return query.list();
+    }
+
+    @Override
+    public <U> List<U> invokeCriteriaForList(DetachedCriteria criteria, Class<U> clazz) {
+        return invokeCriteriaForList(criteria.getExecutableCriteria(session()), clazz);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <U> List<U> invokeCriteriaForList(Criteria criteria, Class<U> clazz) {
+        return criteria.list();
+    }
+
+    @Override
+    public <U> U queryForSingle(String query, Map<String, ?> arguments, Class<U> clazz) {
+        Query q = session().createQuery(query);
+        addParameters(q, arguments);
+        return queryForSingle(q, clazz);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <U> U queryForSingle(Query query, Class<U> clazz) {
+        return (U)query.uniqueResult();
+    }
+
+    @Override
+    public <U> U invokeCriteriaForSingle(DetachedCriteria criteria, Class<U> clazz) {
+        return invokeCriteriaForSingle(criteria.getExecutableCriteria(session()), clazz);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <U> U invokeCriteriaForSingle(Criteria criteria, Class<U> clazz) {
+        return (U)criteria.uniqueResult();
+    }
+
+    private void addParameters(Query query, Map<String, ?> parameters){
+        for(String key: parameters.keySet()){
+            query.setParameter(key, parameters.get(key));
+        }
+    }
+
+    @Override
+    public void close() {
+
+    }
 }

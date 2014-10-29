@@ -17,7 +17,9 @@
 package org.molasdin.wbase.transaction.jdbc;
 
 import org.apache.commons.dbutils.ProxyFactory;
+import org.molasdin.wbase.transaction.Engine;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.sql.Connection;
@@ -28,7 +30,7 @@ import java.util.List;
 /**
  * Created by dbersenev on 15.10.2014.
  */
-public class JdbcEngine implements InvocationHandler{
+public class JdbcEngine implements InvocationHandler, Engine{
     private Connection connection;
     private Connection proxy;
     private List<Statement> statements = new LinkedList<Statement>();
@@ -46,11 +48,24 @@ public class JdbcEngine implements InvocationHandler{
         return connection;
     }
 
-    protected void closeDependencies() throws Exception{
+    private void closeDependencies() throws Exception{
         for(Statement entry: statements){
             if(entry.isClosed()){
                 entry.close();
             }
+        }
+        statements.clear();
+    }
+
+    @Override
+    public void close() {
+        if(statements.isEmpty()){
+            return;
+        }
+        try{
+            closeDependencies();
+        } catch (Exception ex){
+            throw new RuntimeException(ex);
         }
     }
 

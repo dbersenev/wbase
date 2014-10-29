@@ -80,11 +80,12 @@ public class JdbcTransaction extends AbstractTransaction<JdbcEngine> {
 
     @Override
     public void close() {
+        super.close();
         if(isNested()){
             return;
         }
         try{
-            engine().closeDependencies();
+            engine().close();
             if(connection.isClosed()){
                 return;
             }

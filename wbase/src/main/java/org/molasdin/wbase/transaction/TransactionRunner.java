@@ -19,7 +19,7 @@ package org.molasdin.wbase.transaction;
 /**
  * Created by dbersenev on 15.10.2014.
  */
-public interface TransactionRunner<T> {
+public interface TransactionRunner<T extends Engine> {
     void setTransactionProvider(TransactionProvider<T> transactionProvider);
     TransactionProvider<T> transactionProvider();
 

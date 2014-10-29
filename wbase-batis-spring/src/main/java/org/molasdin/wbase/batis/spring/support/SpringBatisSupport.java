@@ -16,6 +16,8 @@
 
 package org.molasdin.wbase.batis.spring.support;
 
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.molasdin.wbase.batis.support.BasicBatisEngine;
 import org.molasdin.wbase.batis.support.BatisEngine;
 import org.molasdin.wbase.batis.support.CommonBatisSupport;
@@ -42,6 +44,16 @@ public class SpringBatisSupport<M> extends CommonBatisSupport<M> {
 
     public void setTemplate(SqlSessionTemplate template) {
         this.template = template;
+    }
+
+    @Override
+    public SqlSessionFactory sessionFactory() {
+        return template.getSqlSessionFactory();
+    }
+
+    @Override
+    public SqlSession session() {
+        return template;
     }
 
     @Override

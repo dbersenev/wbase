@@ -19,7 +19,7 @@ package org.molasdin.wbase.transaction;
 /**
  * Created by dbersenev on 15.10.2014.
  */
-public abstract class AbstractTransaction<T> implements Transaction<T> {
+public abstract class AbstractTransaction<T extends Engine> implements Transaction<T> {
 
     private T engineContext;
     private Boolean nested;
@@ -64,6 +64,11 @@ public abstract class AbstractTransaction<T> implements Transaction<T> {
     public void commitAndClose() {
         commit();
         close();
+    }
+
+    @Override
+    public void close() {
+        engine().close();
     }
 
     @Override

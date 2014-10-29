@@ -19,6 +19,6 @@ package org.molasdin.wbase.transaction;
 /**
  * Created by dbersenev on 15.10.2014.
  */
-public interface TransactionProviderFactory<T> {
+public interface TransactionProviderFactory<T extends Engine> {
     TransactionProvider<T> createProvider();
 }
