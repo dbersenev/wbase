@@ -14,3 +14,4 @@ WBase is the Java library of resusable components and integration with JSF/Sprin
 5. wbase-hibernate - integrates wbase and hibernate using Spring.
 6. wbase-batis - integrates wbase and MyBatis.
 7. wbase-batis-spring - simplifies MyBatis and Spring integration.
+8. wbase-spring - wbase spring integration. For now transactions only.
