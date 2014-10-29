@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Bersenev Dmitry molasdin@outlook.com
+ * Copyright 2013 Bersenev Dmitry molasdin@outlook.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.transaction;
+package org.molasdin.wbase.hibernate;
 
-/**
- * Created by dbersenev on 15.10.2014.
- */
-public interface TransactionRunner<T> {
-    void setTransactionProvider(TransactionProvider<T> transactionProvider);
-    TransactionProvider<T> transactionProvider();
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.molasdin.wbase.storage.Cursor;
+import org.molasdin.wbase.storage.SearchConfiguration;
+import org.springframework.transaction.PlatformTransactionManager;
 
-    <U> U invoke(Transactional<T, U> transactional);
 
-    void setIsolation(TransactionIsolation isolation);
+public interface HibernateCursor<T, U> extends Cursor<T> {
+    void setSearchConfiguration(SearchConfiguration<T, U> searchConfiguration);
+    SearchConfiguration<T,U> searchSpecification();
+    String translateProperty(String original);
 }

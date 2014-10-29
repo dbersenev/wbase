@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.transaction;
+package org.molasdin.wbase;
 
 /**
- * Created by dbersenev on 15.10.2014.
+ * Created by dbersenev on 16.10.2014.
  */
-public interface TransactionRunner<T> {
-    void setTransactionProvider(TransactionProvider<T> transactionProvider);
-    TransactionProvider<T> transactionProvider();
+public class WrapperSource<T> implements Source<T> {
+    private T value;
 
-    <U> U invoke(Transactional<T, U> transactional);
+    public WrapperSource(T value) {
+        this.value = value;
+    }
 
-    void setIsolation(TransactionIsolation isolation);
+    @Override
+    public T value() {
+        return value;
+    }
 }

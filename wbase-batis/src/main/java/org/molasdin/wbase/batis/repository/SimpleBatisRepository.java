@@ -18,7 +18,7 @@ package org.molasdin.wbase.batis.repository;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.molasdin.wbase.batis.CommonMapper;
-import org.molasdin.wbase.batis.support.common.CommonBatisSupport;
+import org.molasdin.wbase.batis.support.CommonBatisSupport;
 import org.molasdin.wbase.storage.*;
 
 /**

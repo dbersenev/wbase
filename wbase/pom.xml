@@ -26,9 +26,20 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>wbase</artifactId>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
     <version>${wbase_version}</version>
+    <modules>
+        <module>../wbase-spring</module>
+    </modules>
 
     <name>wbase</name>
     <description>Collection of reusable components</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>commons-dbutils</groupId>
+            <artifactId>commons-dbutils</artifactId>
+            <version>1.6</version>
+        </dependency>
+    </dependencies>
 </project>

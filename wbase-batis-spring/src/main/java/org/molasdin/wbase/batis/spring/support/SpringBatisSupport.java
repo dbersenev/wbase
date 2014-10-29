@@ -16,90 +16,43 @@
 
 package org.molasdin.wbase.batis.spring.support;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.ibatis.session.SqlSession;
-import org.molasdin.wbase.batis.support.lite.LiteBatisSupport;
-import org.molasdin.wbase.transaction.Transactional;
+import org.molasdin.wbase.batis.support.BasicBatisEngine;
+import org.molasdin.wbase.batis.support.BatisEngine;
+import org.molasdin.wbase.batis.support.CommonBatisSupport;
+import org.molasdin.wbase.spring.transaction.SpringTransactionProviderFactory;
+import org.molasdin.wbase.transaction.EngineFactory;
+import org.molasdin.wbase.transaction.TransactionProviderFactory;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
-import org.springframework.transaction.support.TransactionTemplate;
-
-import java.util.concurrent.Callable;
 
 /**
  * Created by dbersenev on 15.09.2014.
  */
-public class SpringBatisSupport<M> extends LiteBatisSupport<M> {
+public class SpringBatisSupport<M> extends CommonBatisSupport<M> {
     private SqlSessionTemplate template;
-    private Class<M> mapperClass;
-    private TransactionTemplate transactionTemplate;
+    private PlatformTransactionManager manager;
 
-    private Callable<SqlSession> sessionSource;
-    private Callable<M> mapperSource;
-    private Callable<Pair<SqlSession, M>> sessionAndMapperSource;
+    public SpringBatisSupport(Class<M> mapperClass) {
+        super(mapperClass);
+    }
 
     public void setTransactionManager(PlatformTransactionManager manager) {
-        this.transactionTemplate = new TransactionTemplate(manager);
+        this.manager = manager;
     }
 
     public void setTemplate(SqlSessionTemplate template) {
         this.template = template;
     }
 
-    public void setMapper(Class<M> mapperClass) {
-        this.mapperClass = mapperClass;
-    }
-
-    public void init() {
-        sessionSource = new Callable<SqlSession>() {
+    @Override
+    public TransactionProviderFactory<BatisEngine<M>> newDefaultFactory() {
+        return new SpringTransactionProviderFactory<BatisEngine<M>>(manager, new EngineFactory<BatisEngine<M>>() {
             @Override
-            public SqlSession call() throws Exception {
-                return template;
+            public BatisEngine<M> create() {
+                return new BasicBatisEngine<M>(template, mapper());
             }
-        };
-        mapperSource = new Callable<M>() {
-            @Override
-            public M call() throws Exception {
-                return template.getMapper(mapperClass);
-            }
-        };
-        sessionAndMapperSource = new Callable<Pair<SqlSession, M>>() {
-            @Override
-            public Pair<SqlSession, M> call() throws Exception {
-                return Pair.of((SqlSession) template, template.getMapper(mapperClass));
-            }
-        };
+        });
     }
 
-    @Override
-    public Callable<SqlSession> sessionSource() {
-        return sessionSource;
-    }
 
-    @Override
-    public Callable<M> mapperSource() {
-        return mapperSource;
-    }
-
-    @Override
-    public Callable<Pair<SqlSession, M>> sessionAndMapperSource() {
-        return sessionAndMapperSource;
-    }
-
-    @Override
-    public <T, U> U runCommon(SqlSession sqlSession, final T ctx, final Transactional<T, U> tuTransactional) {
-        return transactionTemplate.execute(new TransactionCallback<U>() {
-                                               @Override
-                                               public U doInTransaction(TransactionStatus transactionStatus) {
-                                                   try {
-                                                       return tuTransactional.run(ctx);
-                                                   } catch (Exception ex) {
-                                                       throw new RuntimeException(ex);
-                                                   }
-                                               }
-                                           }
-        );
-    }
 }

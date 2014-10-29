@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.transaction;
+package org.molasdin.wbase.batis.support;
+
+import org.apache.ibatis.session.SqlSession;
+import org.molasdin.wbase.transaction.Transactional;
 
 /**
- * Created by dbersenev on 15.10.2014.
+ * Created by dbersenev on 31.01.14.
  */
-public interface TransactionRunner<T> {
-    void setTransactionProvider(TransactionProvider<T> transactionProvider);
-    TransactionProvider<T> transactionProvider();
-
-    <U> U invoke(Transactional<T, U> transactional);
-
-    void setIsolation(TransactionIsolation isolation);
+public interface BatisEngine<M> {
+    SqlSession session();
+    M mapper();
+    String columnByProperty(String property, String resultMap);
 }

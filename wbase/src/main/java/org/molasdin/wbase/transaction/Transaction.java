@@ -16,14 +16,19 @@
 
 package org.molasdin.wbase.transaction;
 
+import java.io.Closeable;
+
 /**
  * Created by dbersenev on 15.10.2014.
  */
-public interface TransactionRunner<T> {
-    void setTransactionProvider(TransactionProvider<T> transactionProvider);
-    TransactionProvider<T> transactionProvider();
-
-    <U> U invoke(Transactional<T, U> transactional);
-
-    void setIsolation(TransactionIsolation isolation);
+public interface Transaction<T> extends Closeable{
+    void begin();
+    void rollback();
+    void commit();
+    void commitAndClose();
+    void close();
+    Boolean isNested();
+    T engine();
+    Transaction<T> nested();
+    <U> U invokeNested(Transactional<T, U> transactional);
 }

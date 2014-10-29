@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Bersenev Dmitry molasdin@outlook.com
+ * Copyright 2013 Bersenev Dmitry molasdin@outlook.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.transaction;
+package org.molasdin.wbase.hibernate;
 
-/**
- * Created by dbersenev on 15.10.2014.
- */
-public interface TransactionRunner<T> {
-    void setTransactionProvider(TransactionProvider<T> transactionProvider);
-    TransactionProvider<T> transactionProvider();
+import org.apache.commons.lang3.tuple.Pair;
 
-    <U> U invoke(Transactional<T, U> transactional);
+import java.util.Collection;
 
-    void setIsolation(TransactionIsolation isolation);
+
+public interface FilteredHibernateCursor<T> extends HibernateCursor<T, Pair<?, Collection<T>>> {
+    void setOwner(Object owner);
+    void setCollectionProxy(Collection<T> collectionProxy);
 }

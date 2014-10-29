@@ -17,13 +17,25 @@
 package org.molasdin.wbase.transaction;
 
 /**
- * Created by dbersenev on 15.10.2014.
+ * Created by dbersenev on 28.10.2014.
  */
-public interface TransactionRunner<T> {
-    void setTransactionProvider(TransactionProvider<T> transactionProvider);
-    TransactionProvider<T> transactionProvider();
+public class BasicTransactionDescriptor implements TransactionDescriptor {
+    private TransactionIsolation isolation;
 
-    <U> U invoke(Transactional<T, U> transactional);
+    public BasicTransactionDescriptor() {
+    }
 
-    void setIsolation(TransactionIsolation isolation);
+    public BasicTransactionDescriptor(TransactionIsolation isolation) {
+        this.isolation = isolation;
+    }
+
+    @Override
+    public void setIsolation(TransactionIsolation isolation) {
+        this.isolation = isolation;
+    }
+
+    @Override
+    public TransactionIsolation isolation() {
+        return isolation;
+    }
 }

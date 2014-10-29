@@ -16,20 +16,22 @@
 
 package org.molasdin.wbase.storage;
 
-import org.molasdin.wbase.transaction.TransactionIsolation;
-import org.molasdin.wbase.transaction.TransactionRunner;
-import org.molasdin.wbase.transaction.TransactionRunnerFactory;
-import org.molasdin.wbase.transaction.Transactional;
+import org.molasdin.wbase.transaction.*;
 
 /**
  * Created by dbersenev on 15.10.2014.
  */
 public interface Support<T> {
-    void setTransactionRunnerFactory(TransactionRunnerFactory<T> runnerFactory);
-    TransactionRunnerFactory<T> transactionRunnerFactory();
+    void setTransactionProviderFactory(TransactionProviderFactory<T> providerFactory);
+    TransactionProviderFactory<T> transactionProviderFactory();
 
-    TransactionRunner<T> runner();
+    TransactionRunner<T> newRunner();
+    TransactionRunner<T> newRunner(TransactionIsolation isolation);
 
-    <U> U run(Transactional<T> transactional);
-    <U> U run(Transactional<T> transactional, TransactionIsolation isolation);
+    TransactionProvider<T> newTransactionProvider();
+    Transaction<T> newTransaction();
+    Transaction<T> newTransaction(TransactionIsolation isolation);
+
+    <U> U run(Transactional<T, U> transactional);
+    <U> U run(Transactional<T, U> transactional, TransactionIsolation isolation);
 }

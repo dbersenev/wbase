@@ -16,9 +16,25 @@
 
 package org.molasdin.wbase.transaction;
 
+import java.sql.Connection;
+
 /**
  * Created by dbersenev on 15.10.2014.
  */
 public enum TransactionIsolation {
-    NONE, READ_COMMITTED, READ_UNCOMMITTED, REPEATABLE_READ, SERIALIZABLE
+    NONE(Connection.TRANSACTION_NONE),
+    READ_COMMITTED(Connection.TRANSACTION_READ_COMMITTED),
+    READ_UNCOMMITTED(Connection.TRANSACTION_READ_UNCOMMITTED),
+    REPEATABLE_READ(Connection.TRANSACTION_REPEATABLE_READ),
+    SERIALIZABLE(Connection.TRANSACTION_SERIALIZABLE);
+
+    private Integer jdbcCode;
+
+    TransactionIsolation(Integer jdbcCode) {
+        this.jdbcCode = jdbcCode;
+    }
+
+    public Integer jdbcCode(){
+        return jdbcCode;
+    }
 }

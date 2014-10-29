@@ -24,6 +24,6 @@ package org.molasdin.wbase.transaction;
  * Allows running some code within transaction.
  * @param <T>
  */
-public interface Transactional<T> {
-    <U> U run(TransactionContext<T> context) throws Exception;
+public interface Transactional<T, U> {
+    U run(Transaction<T> tx) throws Exception;
 }

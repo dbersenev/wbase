@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.transaction;
+package org.molasdin.wbase.hibernate;
+
+import org.molasdin.wbase.storage.Repository;
 
 /**
- * Created by dbersenev on 15.10.2014.
+ * Created by dbersenev on 13.03.14.
  */
-public interface TransactionRunner<T> {
-    void setTransactionProvider(TransactionProvider<T> transactionProvider);
-    TransactionProvider<T> transactionProvider();
-
-    <U> U invoke(Transactional<T, U> transactional);
-
-    void setIsolation(TransactionIsolation isolation);
+public interface HibernateRepository<T> extends Repository<T> {
+    void attach(T o);
 }

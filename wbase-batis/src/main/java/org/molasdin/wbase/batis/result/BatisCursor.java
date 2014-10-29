@@ -17,11 +17,12 @@
 package org.molasdin.wbase.batis.result;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.molasdin.wbase.batis.support.BatisContext;
+import org.molasdin.wbase.batis.support.BatisEngine;
 import org.molasdin.wbase.batis.support.BatisSupport;
 import org.molasdin.wbase.storage.AbstractCursor;
 import org.molasdin.wbase.storage.Order;
 import org.molasdin.wbase.storage.Cursor;
+import org.molasdin.wbase.transaction.Transaction;
 import org.molasdin.wbase.transaction.Transactional;
 
 import java.util.HashMap;
@@ -41,24 +42,24 @@ public abstract class BatisCursor<T, U> extends AbstractCursor<T> {
 
     @Override
     public List<T> data() {
-        return postProcessData(support.run(new Transactional <BatisContext<U>,List<T>>() {
-            public List<T> run(BatisContext<U> ctx) {
-                return batisData(ctx, createRestriction(ctx));
+        return postProcessData(support.run(new Transactional <BatisEngine<U>,List<T>>() {
+            public List<T> run(Transaction<BatisEngine<U>> t) {
+                return batisData(t.engine(), createRestriction(t.engine()));
             }
         }));
     }
 
     @Override
     public long totalRecords() {
-        Long result = support.run(new Transactional<BatisContext<U>, Long>() {
-            public Long run(BatisContext<U> ctx) {
-                return batisCount(ctx, createRestriction(ctx));
+        Long result = support.run(new Transactional<BatisEngine<U>, Long>() {
+            public Long run(Transaction<BatisEngine<U>> t) {
+                return batisCount(t.engine(), createRestriction(t.engine()));
             }
         });
         return result != null? result:0;
     }
 
-    private Restriction createRestriction(BatisContext<U> ctx){
+    private Restriction createRestriction(BatisEngine<U> ctx){
         return  SimpleRestriction.create()
                 .withRange(currentOffset(), pageSize())
                 .withOrders(columnOrders(ctx))
@@ -69,7 +70,7 @@ public abstract class BatisCursor<T, U> extends AbstractCursor<T> {
         return null;
     }
 
-    public Map<String,String> columnFilters(BatisContext<U> ctx){
+    public Map<String,String> columnFilters(BatisEngine<U> ctx){
         Map<String,String> newFilters = new HashMap<String, String>();
         for(String entry: filters().keySet()){
             String value = filters().get(entry).getRight();
@@ -78,7 +79,7 @@ public abstract class BatisCursor<T, U> extends AbstractCursor<T> {
         return propertyToColumnFilter(ctx, newFilters);
     }
 
-    public List<Pair<String,Order>> columnOrders(BatisContext<U> ctx){
+    public List<Pair<String,Order>> columnOrders(BatisEngine<U> ctx){
         List<Pair<String, Order>> oldOrder = orders();
         if(oldOrder == null){
             return null;
@@ -93,7 +94,7 @@ public abstract class BatisCursor<T, U> extends AbstractCursor<T> {
         return result;
     }
 
-    private Map<String, String> propertyToColumnFilter(BatisContext<U> ctx, Map<String,String> properties){
+    private Map<String, String> propertyToColumnFilter(BatisEngine<U> ctx, Map<String,String> properties){
         Map<String,String> result = new HashMap<String, String>();
         for(String key: properties.keySet()){
             result.put(ctx.columnByProperty(key, mapperId), properties.get(key));
@@ -101,8 +102,8 @@ public abstract class BatisCursor<T, U> extends AbstractCursor<T> {
         return result;
     }
 
-    protected abstract List<T> batisData(BatisContext<U> ctx, Restriction restriction);
+    protected abstract List<T> batisData(BatisEngine<U> ctx, Restriction restriction);
 
-    protected abstract Long batisCount(BatisContext<U> ctx, Restriction restriction);
+    protected abstract Long batisCount(BatisEngine<U> ctx, Restriction restriction);
 
 }

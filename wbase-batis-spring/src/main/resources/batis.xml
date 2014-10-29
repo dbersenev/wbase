@@ -38,7 +38,7 @@
         <constructor-arg index="0" ref="sqlSessionFactory"/>
     </bean>
 
-    <bean id="supportCommon" class="org.molasdin.wbase.batis.spring.support.SpringBatisSupport" init-method="init"
+    <bean id="supportCommon" class="org.molasdin.wbase.batis.spring.support.SpringBatisSupport"
           abstract="true">
         <property name="template" ref="sqlSession"/>
         <property name="transactionManager" ref="transactionManager"/>

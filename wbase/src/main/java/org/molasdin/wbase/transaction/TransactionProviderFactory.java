@@ -19,11 +19,6 @@ package org.molasdin.wbase.transaction;
 /**
  * Created by dbersenev on 15.10.2014.
  */
-public interface TransactionRunner<T> {
-    void setTransactionProvider(TransactionProvider<T> transactionProvider);
-    TransactionProvider<T> transactionProvider();
-
-    <U> U invoke(Transactional<T, U> transactional);
-
-    void setIsolation(TransactionIsolation isolation);
+public interface TransactionProviderFactory<T> {
+    TransactionProvider<T> createProvider();
 }

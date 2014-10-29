@@ -16,41 +16,78 @@
 
 package org.molasdin.wbase.storage;
 
-import org.molasdin.wbase.transaction.TransactionIsolation;
-import org.molasdin.wbase.transaction.TransactionRunner;
-import org.molasdin.wbase.transaction.TransactionRunnerFactory;
-import org.molasdin.wbase.transaction.Transactional;
+import org.molasdin.wbase.transaction.*;
 
 /**
  * Created by dbersenev on 15.10.2014.
  */
 public class BasicSupport<T> implements Support<T> {
-    private TransactionRunnerFactory<T> runnerFactory;
+    private TransactionProviderFactory<T> providerFactory;
 
     @Override
-    public void setTransactionRunnerFactory(TransactionRunnerFactory<T> runnerFactory) {
-        this.runnerFactory = runnerFactory;
+    public void setTransactionProviderFactory(TransactionProviderFactory<T> runnerFactory) {
+        this.providerFactory = runnerFactory;
     }
 
     @Override
-    public TransactionRunnerFactory<T> transactionRunnerFactory() {
-        return runnerFactory;
+    public TransactionProviderFactory<T> transactionProviderFactory() {
+        if(providerFactory != null){
+            return providerFactory;
+        }
+        synchronized (this){
+            if(providerFactory != null){
+                return providerFactory;
+            }
+            setTransactionProviderFactory(newDefaultFactory());
+        }
+        return providerFactory;
     }
 
     @Override
-    public <U> U run(Transactional<T> transactional, TransactionIsolation isolation) {
-        TransactionRunner<T> runner = runnerFactory.createRunner();
-        runner.setIsolation(isolation);
-        return runner.invoke(transactional);
+    public <U> U run(Transactional<T, U> transactional, TransactionIsolation isolation) {
+        return newRunner(isolation).invoke(transactional);
     }
 
     @Override
-    public TransactionRunner<T> runner() {
-        return runnerFactory.createRunner();
+    public TransactionProvider<T> newTransactionProvider() {
+        return providerFactory.createProvider();
     }
 
     @Override
-    public <U> U run(Transactional<T> transactional) {
-        return runnerFactory.createRunner().invoke(transactional);
+    public Transaction<T> newTransaction() {
+        return newTransaction(null);
+    }
+
+    @Override
+    public Transaction<T> newTransaction(TransactionIsolation isolation) {
+        TransactionProvider<T> provider = newTransactionProvider();
+        if (isolation != null) {
+            return provider.newTransaction(isolation);
+        }
+        return provider.newTransaction();
+    }
+
+    @Override
+    public TransactionRunner<T> newRunner() {
+        return newRunner(null);
+    }
+
+    @Override
+    public TransactionRunner<T> newRunner(TransactionIsolation isolation) {
+        TransactionProvider<T> provider = newTransactionProvider();
+        TransactionRunner<T> runner = new BasicTransactionRunner<T>(provider);
+        if (isolation != null) {
+            runner.setIsolation(isolation);
+        }
+        return runner;
+    }
+
+    public TransactionProviderFactory<T> newDefaultFactory(){
+        return null;
+    }
+
+    @Override
+    public <U> U run(Transactional<T, U> transactional) {
+        return newRunner().invoke(transactional);
     }
 }

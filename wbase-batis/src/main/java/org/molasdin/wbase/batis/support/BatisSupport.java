@@ -18,16 +18,13 @@ package org.molasdin.wbase.batis.support;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.ibatis.session.SqlSession;
+import org.molasdin.wbase.storage.Support;
 import org.molasdin.wbase.transaction.Transactional;
 
 /**
  * Created by dbersenev on 13.03.14.
  */
-public interface BatisSupport<M> {
+public interface BatisSupport<M> extends Support<BatisEngine<M>>{
     SqlSession session();
-    <U> U runSimple(Transactional<SqlSession, U> runner);
-    <T, U> U runCommon(SqlSession session, T ctx, Transactional<T, U> runner);
     M mapper();
-    Pair<SqlSession, M> sessionAndMapper();
-    <F> F run(Transactional<BatisContext<M>, F> transactional);
 }

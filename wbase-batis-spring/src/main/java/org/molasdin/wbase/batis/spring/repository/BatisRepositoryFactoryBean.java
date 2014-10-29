@@ -61,11 +61,9 @@ public class BatisRepositoryFactoryBean<T extends Storable<T>, M extends CommonM
     @SuppressWarnings("unchecked")
     @Override
     public F getObject() throws Exception {
-        SpringBatisSupport<M> support = new SpringBatisSupport<M>();
-        support.setMapper(mapperClass);
+        SpringBatisSupport<M> support = new SpringBatisSupport<M>(mapperClass);
         support.setTemplate(template);
         support.setTransactionManager(txManager);
-        support.init();
         BatisRepository<T,M> repo = ConstructorUtils.invokeExactConstructor(repositoryClass, new Object[]{support},
                 new Class[]{BatisSupport.class});
         repo.setMapperId(mapperId);

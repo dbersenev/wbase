@@ -14,16 +14,30 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.transaction;
+package org.molasdin.wbase.transaction.jdbc;
+
+import org.molasdin.wbase.Source;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
- * Created by dbersenev on 15.10.2014.
+ * Created by dbersenev on 16.10.2014.
  */
-public interface TransactionRunner<T> {
-    void setTransactionProvider(TransactionProvider<T> transactionProvider);
-    TransactionProvider<T> transactionProvider();
+public class DataSourceConnectionSource implements Source<Connection> {
+    private DataSource dataSource;
 
-    <U> U invoke(Transactional<T, U> transactional);
+    public DataSourceConnectionSource(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
-    void setIsolation(TransactionIsolation isolation);
+    @Override
+    public Connection value() {
+        try {
+            return dataSource.getConnection();
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 }
