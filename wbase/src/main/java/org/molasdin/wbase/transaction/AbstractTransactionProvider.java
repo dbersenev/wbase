@@ -26,6 +26,11 @@ public abstract class AbstractTransactionProvider<T extends Engine> implements T
     }
 
     @Override
+    public T detachedEngine() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Transaction<T> newTransaction(TransactionIsolation isolation) {
         return newTransaction(new BasicTransactionDescriptor(isolation));
     }

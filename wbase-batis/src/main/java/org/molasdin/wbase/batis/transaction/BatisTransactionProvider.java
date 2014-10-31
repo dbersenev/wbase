@@ -29,47 +29,32 @@ import org.molasdin.wbase.transaction.*;
  */
 public class BatisTransactionProvider<M> extends AbstractTransactionProvider<BatisEngine<M>> {
     private SqlSessionFactory sessionFactory;
-    private SqlSession sqlSession;
-    private M mapper;
     private Class<M> mapperClass;
 
     public BatisTransactionProvider() {
     }
 
-    public BatisTransactionProvider(SqlSessionFactory sessionFactory) {
+    public BatisTransactionProvider(SqlSessionFactory sessionFactory, Class<M> mapperClass) {
         this.sessionFactory = sessionFactory;
-    }
-
-    public void setMapper(M mapper) {
-        this.mapper = mapper;
+        this.mapperClass = mapperClass;
     }
 
     public void setMapperClass(Class<M> clazz){
         this.mapperClass = clazz;
     }
 
-    public void setSession(SqlSession session) {
-        this.sqlSession = session;
+    @Override
+    public Transaction<BatisEngine<M>> newTransaction(TransactionDescriptor descriptor) {
+        final SqlSession session =  descriptor.isolation() != null?
+                sessionFactory.openSession(TransactionIsolationLevel.values()[descriptor.isolation().jdbcCode()]):
+                sessionFactory.openSession();
+        final M m = session.getMapper(mapperClass);
+        return new BatisTransaction<M>(new BasicBatisEngine<M>(session, m), session);
     }
 
     @Override
-    public Transaction<BatisEngine<M>> newTransaction(TransactionDescriptor descriptor) {
-        SqlSession session = sqlSession;
-        if(session == null){
-            session =  descriptor.isolation() != null? sessionFactory.openSession(TransactionIsolationLevel.values()[descriptor.isolation().jdbcCode()]):
-                    sessionFactory.openSession();
-        }
-        M m = mapper;
-        if(m == null){
-            m = session.getMapper(mapperClass);
-        }
-        final SqlSession finalSession = session;
-        final M finalM = m;
-        return new BatisTransaction<M>(new EngineFactory<BatisEngine<M>>() {
-            @Override
-            public BatisEngine<M> create() {
-                return new BasicBatisEngine<M>(finalSession, finalM);
-            }
-        }, session);
+    public BatisEngine<M> detachedEngine() {
+        SqlSession session = sessionFactory.openSession();
+        return new BasicBatisEngine<M>(session, session.getMapper(mapperClass));
     }
 }

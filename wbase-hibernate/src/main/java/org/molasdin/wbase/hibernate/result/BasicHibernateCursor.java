@@ -21,9 +21,11 @@ import org.hibernate.Session;
 
 
 import org.hibernate.criterion.*;
+import org.molasdin.wbase.hibernate.HibernateEngine;
 import org.molasdin.wbase.hibernate.HibernateSupport;
 import org.molasdin.wbase.hibernate.criterion.FilterCriterion;
 import org.molasdin.wbase.storage.*;
+import org.molasdin.wbase.transaction.TransactionRunner;
 
 import java.util.List;
 import java.util.Map;
@@ -34,8 +36,8 @@ public class BasicHibernateCursor<T> extends CommonHibernateCursor<T, DetachedCr
     public BasicHibernateCursor() {
     }
 
-    public BasicHibernateCursor(HibernateSupport support) {
-        super(support);
+    public BasicHibernateCursor(TransactionRunner<HibernateEngine> runner) {
+        super(runner);
     }
 
     public static MatchMode toMatchMode(FilteringMode mode){
@@ -102,7 +104,7 @@ public class BasicHibernateCursor<T> extends CommonHibernateCursor<T, DetachedCr
     public Cursor<T> copy() {
         BasicHibernateCursor<T> newSearchResult = new BasicHibernateCursor<T>();
         newSearchResult.setSearchConfiguration(searchSpecification());
-        newSearchResult.setHibernateSupport(support());
+        newSearchResult.setRunner(runner());
         return newSearchResult;
     }
 }

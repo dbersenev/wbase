@@ -25,24 +25,18 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 /**
  * Created by dbersenev on 28.10.2014.
  */
-public class SpringTransactionProvider<T extends Engine> extends AbstractTransactionProvider<T> {
+public abstract class SpringTransactionProvider<T extends Engine> extends AbstractTransactionProvider<T> {
     private PlatformTransactionManager tx;
-    private EngineFactory<T> engineFactory;
 
     public SpringTransactionProvider() {
     }
 
-    public SpringTransactionProvider(PlatformTransactionManager tx, EngineFactory<T> engineFactory) {
-        this.engineFactory = engineFactory;
+    public SpringTransactionProvider(PlatformTransactionManager tx) {
         this.tx = tx;
     }
 
     public void setTransactionManager(PlatformTransactionManager tx) {
         this.tx = tx;
-    }
-
-    public void setEngineFactory(EngineFactory<T> engineFactory) {
-        this.engineFactory = engineFactory;
     }
 
     @Override
@@ -51,13 +45,11 @@ public class SpringTransactionProvider<T extends Engine> extends AbstractTransac
         if (descriptor.isolation() != null) {
             def.setIsolationLevel(descriptor.isolation().jdbcCode());
         }
+        TransactionStatus status = tx.getTransaction(def);
 
-        SpringTransaction<T> st = new SpringTransaction<T>(engineFactory, tx, new Source<TransactionStatus>() {
-            @Override
-            public TransactionStatus value() {
-                return tx.getTransaction(def);
-            }
-        });
-        return st;
+        return new SpringTransaction<T>(newEngine(), tx, status);
     }
+
+    public abstract T newEngine();
+
 }

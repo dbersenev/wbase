@@ -21,9 +21,11 @@ import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.molasdin.wbase.hibernate.FilteredHibernateCursor;
+import org.molasdin.wbase.hibernate.HibernateEngine;
 import org.molasdin.wbase.hibernate.HibernateSupport;
 import org.molasdin.wbase.storage.Order;
 import org.molasdin.wbase.storage.Cursor;
+import org.molasdin.wbase.transaction.TransactionRunner;
 
 import java.util.Collection;
 import java.util.List;
@@ -34,8 +36,8 @@ public class BasicFilteredHibernateCursor<T> extends CommonHibernateCursor<T, Pa
     public BasicFilteredHibernateCursor() {
     }
 
-    public BasicFilteredHibernateCursor(HibernateSupport support) {
-        super(support);
+    public BasicFilteredHibernateCursor(TransactionRunner<HibernateEngine> runner) {
+        super(runner);
     }
 
     private final static String FILTER_ORDER = "this.%s %s";

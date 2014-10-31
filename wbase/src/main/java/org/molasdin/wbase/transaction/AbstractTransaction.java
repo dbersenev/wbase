@@ -21,30 +21,37 @@ package org.molasdin.wbase.transaction;
  */
 public abstract class AbstractTransaction<T extends Engine> implements Transaction<T> {
 
-    private T engineContext;
+    private T engine;
     private Boolean nested;
-    private EngineFactory<T> engineFactory;
+//    private EngineFactory<T> engineFactory;
 
-    public AbstractTransaction() {
+    public AbstractTransaction(T engine) {
+        this.engine = engine;
     }
 
-    public AbstractTransaction(EngineFactory<T> engineFactory) {
-        this.engineContext = engineContext;
-    }
+//    public AbstractTransaction(EngineFactory<T> engineFactory) {
+//        this.engineFactory = engineFactory;
+//    }
 
-    public void setEngineFactory(EngineFactory<T> engineFactory) {
-        this.engineFactory = engineFactory;
-    }
-    public EngineFactory<T> engineFactory(){
-        return engineFactory;
+//    public void setEngineFactory(EngineFactory<T> engineFactory) {
+//        this.engineFactory = engineFactory;
+//    }
+//    public EngineFactory<T> engineFactory(){
+//        return engineFactory;
+//    }
+
+
+    @Override
+    public void begin() {
+
     }
 
     @Override
     public T engine() {
-        if(engineContext == null){
-            engineContext = engineFactory.create();
-        }
-        return engineContext;
+        /*if(engine == null){
+            engine = engineFactory.create();
+        }*/
+        return engine;
     }
 
     protected void setNested(Boolean nested) {

@@ -23,4 +23,5 @@ public interface TransactionProvider<T extends Engine> {
     Transaction<T> newTransaction();
     Transaction<T> newTransaction(TransactionIsolation isolation);
     Transaction<T> newTransaction(TransactionDescriptor descriptor);
+    T detachedEngine();
 }

@@ -47,7 +47,6 @@ public class SimpleJdbcDao extends BasicSupport<JdbcEngine> {
 
     public void method2(){
         Transaction<JdbcEngine> t = newTransaction();
-        t.begin();
         Connection connection = t.engine().connection();
         Transaction<JdbcEngine> inner = t.nested();
         inner.begin();

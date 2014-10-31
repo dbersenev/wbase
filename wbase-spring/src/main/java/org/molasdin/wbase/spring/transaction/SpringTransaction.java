@@ -32,22 +32,16 @@ import org.springframework.transaction.TransactionStatus;
 public class SpringTransaction<T extends Engine> extends AbstractTransaction<T> {
     private PlatformTransactionManager tx;
     private TransactionStatus status;
-    private Source<TransactionStatus> statusSource;
     private Object savepoint;
 
-    public SpringTransaction(EngineFactory<T> engineFactory, PlatformTransactionManager tx, Source<TransactionStatus> statusSource) {
-        super(engineFactory);
+    public SpringTransaction(T engine, PlatformTransactionManager tx, TransactionStatus status) {
+        super(engine);
         this.tx = tx;
-        this.statusSource = statusSource;
+        this.status = status;
     }
 
     protected void setSavepoint(Object savepoint){
         this.savepoint = savepoint;
-    }
-
-    @Override
-    public void begin() {
-        status = statusSource.value();
     }
 
     @Override
@@ -77,12 +71,7 @@ public class SpringTransaction<T extends Engine> extends AbstractTransaction<T> 
     @Override
     public Transaction<T> nested() {
         Object tmp = status.createSavepoint();
-        SpringTransaction<T> nested = new SpringTransaction<T>(engineFactory(), tx, new Source<TransactionStatus>() {
-            @Override
-            public TransactionStatus value() {
-                return status;
-            }
-        });
+        SpringTransaction<T> nested = new SpringTransaction<T>(engine(), tx, status);
         nested.setSavepoint(tmp);
         return nested;
     }

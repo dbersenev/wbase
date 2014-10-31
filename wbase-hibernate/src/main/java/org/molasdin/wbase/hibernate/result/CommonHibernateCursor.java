@@ -24,10 +24,7 @@ import org.molasdin.wbase.hibernate.HibernateSupport;
 import org.molasdin.wbase.storage.AbstractCursor;
 import org.molasdin.wbase.storage.Cursor;
 import org.molasdin.wbase.storage.SearchConfiguration;
-import org.molasdin.wbase.transaction.Transaction;
-import org.molasdin.wbase.transaction.TransactionIsolation;
-import org.molasdin.wbase.transaction.TransactionProvider;
-import org.molasdin.wbase.transaction.Transactional;
+import org.molasdin.wbase.transaction.*;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Isolation;
@@ -42,25 +39,20 @@ import java.util.List;
 public abstract class CommonHibernateCursor<T, U> extends AbstractCursor<T> implements HibernateCursor<T, U> {
 
     private SearchConfiguration<T,U> searchConfiguration;
-    private HibernateSupport support;
+    private TransactionRunner<HibernateEngine> runner;
 
     protected CommonHibernateCursor() {
     }
 
-    protected CommonHibernateCursor(HibernateSupport support) {
-        this.support = support;
+    protected CommonHibernateCursor(TransactionRunner<HibernateEngine> runner) {
+        this.runner = runner;
     }
 
-    public void setHibernateSupport(HibernateSupport support) {
-        this.support = support;
+    public void setRunner(TransactionRunner<HibernateEngine> runner) {
+        this.runner = runner;
     }
-    public HibernateSupport support(){
-        return support;
-    }
-
-    protected void configureTemplate(TransactionTemplate template){
-        template.setReadOnly(true);
-        template.setIsolationLevel(Isolation.READ_UNCOMMITTED.value());
+    public TransactionRunner<HibernateEngine> runner(){
+        return runner;
     }
 
     public void setSearchConfiguration(SearchConfiguration<T, U> searchConfiguration) {
@@ -89,16 +81,16 @@ public abstract class CommonHibernateCursor<T, U> extends AbstractCursor<T> impl
     }
 
     public List<T> data(){
-        return support.run(new Transactional<HibernateEngine, List<T>>() {
+        return runner().invoke(new Transactional<HibernateEngine, List<T>>() {
             @Override
             public List<T> run(Transaction<HibernateEngine> tx) throws Exception {
                 return dataCallback(tx.engine().session());
             }
-        }, TransactionIsolation.READ_UNCOMMITTED);
+        });
     }
 
     public long totalRecords(){
-        return support.run(new Transactional<HibernateEngine, Long>() {
+        return runner().invoke(new Transactional<HibernateEngine, Long>() {
             @Override
             public Long run(Transaction<HibernateEngine> tx) throws Exception {
                 Long result = totalCallback(tx.engine().session());

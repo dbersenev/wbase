@@ -21,10 +21,12 @@ import org.apache.commons.lang3.text.StrBuilder;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.molasdin.wbase.hibernate.HibernateEngine;
 import org.molasdin.wbase.hibernate.HibernateMatchMode;
 import org.molasdin.wbase.hibernate.HibernateSupport;
 import org.molasdin.wbase.storage.FilteringMode;
 import org.molasdin.wbase.storage.Order;
+import org.molasdin.wbase.transaction.TransactionRunner;
 
 import java.util.List;
 import java.util.Map;
@@ -38,8 +40,8 @@ public class BasicHibernateQueryCursor<T> extends CommonHibernateCursor<T, Pair<
     public BasicHibernateQueryCursor() {
     }
 
-    public BasicHibernateQueryCursor(HibernateSupport support) {
-        super(support);
+    public BasicHibernateQueryCursor(TransactionRunner<HibernateEngine> runner) {
+        super(runner);
     }
 
     @Override

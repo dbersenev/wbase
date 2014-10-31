@@ -18,12 +18,11 @@ package org.molasdin.wbase.batis.spring.support;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.molasdin.wbase.batis.support.BasicBatisEngine;
+import org.molasdin.wbase.batis.spring.transaction.BatisSpringTransactionProvider;
 import org.molasdin.wbase.batis.support.BatisEngine;
 import org.molasdin.wbase.batis.support.CommonBatisSupport;
-import org.molasdin.wbase.spring.transaction.SpringTransactionProviderFactory;
-import org.molasdin.wbase.transaction.EngineFactory;
-import org.molasdin.wbase.transaction.TransactionProviderFactory;
+import org.molasdin.wbase.spring.transaction.SpringTransactionProvider;
+import org.molasdin.wbase.transaction.TransactionProvider;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 
@@ -57,13 +56,10 @@ public class SpringBatisSupport<M> extends CommonBatisSupport<M> {
     }
 
     @Override
-    public TransactionProviderFactory<BatisEngine<M>> newDefaultFactory() {
-        return new SpringTransactionProviderFactory<BatisEngine<M>>(manager, new EngineFactory<BatisEngine<M>>() {
-            @Override
-            public BatisEngine<M> create() {
-                return new BasicBatisEngine<M>(template, mapper());
-            }
-        });
+    public TransactionProvider<BatisEngine<M>> newDefaultProvider() {
+        SpringTransactionProvider<BatisEngine<M>> provider = new BatisSpringTransactionProvider<M>(template, mapperClass());
+        provider.setTransactionManager(manager);
+        return provider;
     }
 
 

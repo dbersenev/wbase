@@ -22,35 +22,30 @@ import org.molasdin.wbase.transaction.*;
  * Created by dbersenev on 15.10.2014.
  */
 public class BasicSupport<T extends Engine> implements Support<T> {
-    private TransactionProviderFactory<T> providerFactory;
+    private TransactionProvider<T> provider;
 
     @Override
-    public void setTransactionProviderFactory(TransactionProviderFactory<T> runnerFactory) {
-        this.providerFactory = runnerFactory;
+    public void setTransactionProvider(TransactionProvider<T> provider) {
+        this.provider = provider;
     }
 
     @Override
-    public TransactionProviderFactory<T> transactionProviderFactory() {
-        if(providerFactory != null){
-            return providerFactory;
+    public TransactionProvider<T> transactionProvider() {
+        if(provider != null){
+            return provider;
         }
         synchronized (this){
-            if(providerFactory != null){
-                return providerFactory;
+            if(provider != null){
+                return provider;
             }
-            setTransactionProviderFactory(newDefaultFactory());
+            setTransactionProvider(newDefaultProvider());
         }
-        return providerFactory;
+        return provider;
     }
 
     @Override
     public <U> U run(Transactional<T, U> transactional, TransactionIsolation isolation) {
         return newRunner(isolation).invoke(transactional);
-    }
-
-    @Override
-    public TransactionProvider<T> newTransactionProvider() {
-        return providerFactory.createProvider();
     }
 
     @Override
@@ -60,7 +55,7 @@ public class BasicSupport<T extends Engine> implements Support<T> {
 
     @Override
     public Transaction<T> newTransaction(TransactionIsolation isolation) {
-        TransactionProvider<T> provider = newTransactionProvider();
+        TransactionProvider<T> provider = transactionProvider();
         if (isolation != null) {
             return provider.newTransaction(isolation);
         }
@@ -74,7 +69,7 @@ public class BasicSupport<T extends Engine> implements Support<T> {
 
     @Override
     public TransactionRunner<T> newRunner(TransactionIsolation isolation) {
-        TransactionProvider<T> provider = newTransactionProvider();
+        TransactionProvider<T> provider = transactionProvider();
         TransactionRunner<T> runner = new BasicTransactionRunner<T>(provider);
         if (isolation != null) {
             runner.setIsolation(isolation);
@@ -82,7 +77,7 @@ public class BasicSupport<T extends Engine> implements Support<T> {
         return runner;
     }
 
-    public TransactionProviderFactory<T> newDefaultFactory(){
+    public TransactionProvider<T> newDefaultProvider(){
         return null;
     }
 

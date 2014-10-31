@@ -32,18 +32,13 @@ public class BatisTransaction<M> extends AbstractTransaction<BatisEngine<M>> {
     private SqlSession session;
     private Savepoint savepoint;
 
-    public BatisTransaction(EngineFactory<BatisEngine<M>> engineFactory, SqlSession session) {
-        super(engineFactory);
+    public BatisTransaction(BatisEngine<M> engine, SqlSession session) {
+        super(engine);
         this.session = session;
     }
 
     protected void setSavepoint(Savepoint savepoint) {
         this.savepoint = savepoint;
-    }
-
-    @Override
-    public void begin() {
-
     }
 
     @Override
@@ -72,7 +67,7 @@ public class BatisTransaction<M> extends AbstractTransaction<BatisEngine<M>> {
 
     @Override
     public Transaction<BatisEngine<M>> nested() {
-        BatisTransaction<M> nested = new BatisTransaction<M>(engineFactory(), session);
+        BatisTransaction<M> nested = new BatisTransaction<M>(engine(), session);
         nested.setNested(true);
         Savepoint tmp = null;
         try {

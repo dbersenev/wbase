@@ -42,11 +42,19 @@ public class JdbcTransactionProvider extends AbstractTransactionProvider<JdbcEng
                 throw new RuntimeException(ex);
             }
         }
-        return new JdbcTransaction(new EngineFactory<JdbcEngine>() {
-            @Override
-            public JdbcEngine create() {
-                return new JdbcEngine(connection);
-            }
-        }, connection);
+        try {
+            Boolean autocommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            JdbcEngine engine = new JdbcEngine(connection);
+            return new JdbcTransaction(engine, connection, autocommit);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+//        return new JdbcTransaction(connectionSource);
+    }
+
+    @Override
+    public JdbcEngine detachedEngine() {
+        return new JdbcEngine(connectionSource.value());
     }
 }

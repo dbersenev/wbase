@@ -21,7 +21,7 @@ import java.io.Closeable;
 /**
  * Created by dbersenev on 15.10.2014.
  */
-public interface Transaction<T extends Engine> extends Closeable{
+public interface Transaction<T extends Engine>{
     void begin();
     void rollback();
     void commit();

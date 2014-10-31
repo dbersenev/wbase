@@ -16,6 +16,7 @@
 
 package org.molasdin.wbase.transaction.jdbc;
 
+import org.molasdin.wbase.Source;
 import org.molasdin.wbase.transaction.AbstractTransaction;
 import org.molasdin.wbase.transaction.EngineFactory;
 import org.molasdin.wbase.transaction.Transaction;
@@ -30,27 +31,20 @@ public class JdbcTransaction extends AbstractTransaction<JdbcEngine> {
     private Savepoint savepoint;
     private Connection connection;
     private Boolean autocommit;
+    private Source<Connection> source;
 
-    public JdbcTransaction(EngineFactory<JdbcEngine> engineFactory, Connection connection) {
-        super(engineFactory);
+   /* public JdbcTransaction(Source<Connection> source) {
+        this.source = source;
+    }*/
+
+    public JdbcTransaction(JdbcEngine engine, Connection connection, Boolean autocommit) {
+        super(engine);
         this.connection = connection;
+        this.autocommit = autocommit;
     }
 
     public void setSavepoint(Savepoint savepoint) {
         this.savepoint = savepoint;
-    }
-
-    @Override
-    public void begin() {
-        if(isNested()){
-            return;
-        }
-        try {
-            autocommit = connection.getAutoCommit();
-            connection.setAutoCommit(false);
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
     }
 
     @Override
@@ -97,7 +91,7 @@ public class JdbcTransaction extends AbstractTransaction<JdbcEngine> {
 
     @Override
     public Transaction<JdbcEngine> nested() {
-        JdbcTransaction nested = new JdbcTransaction(engineFactory(), connection);
+        JdbcTransaction nested = new JdbcTransaction(engine(), connection, autocommit);
         nested.setNested(true);
         try {
             nested.setSavepoint(connection.setSavepoint());

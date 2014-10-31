@@ -18,9 +18,9 @@ package org.molasdin.wbase.batis.support;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.molasdin.wbase.batis.transaction.BatisTransactionProviderFactory;
+import org.molasdin.wbase.batis.transaction.BatisTransactionProvider;
 import org.molasdin.wbase.storage.BasicSupport;
-import org.molasdin.wbase.transaction.TransactionProviderFactory;
+import org.molasdin.wbase.transaction.TransactionProvider;
 
 /**
  * User: dbersenev
@@ -48,8 +48,8 @@ public class CommonBatisSupport<M> extends BasicSupport<BatisEngine<M>> implemen
         return factory;
     }
     @Override
-    public TransactionProviderFactory<BatisEngine<M>> newDefaultFactory() {
-        return new BatisTransactionProviderFactory<M>(factory, mapperClass);
+    public TransactionProvider<BatisEngine<M>> newDefaultProvider() {
+        return new BatisTransactionProvider<M>(factory, mapperClass);
     }
 
     public SqlSession session() {

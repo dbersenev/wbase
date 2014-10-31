@@ -24,6 +24,10 @@ import org.molasdin.wbase.hibernate.result.BasicFilteredHibernateCursor;
 import org.molasdin.wbase.hibernate.result.BasicHibernateCursor;
 import org.molasdin.wbase.hibernate.result.BasicHibernateQueryCursor;
 import org.molasdin.wbase.storage.SearchConfiguration;
+import org.molasdin.wbase.transaction.BasicTransactionRunner;
+import org.molasdin.wbase.transaction.TransactionIsolation;
+import org.molasdin.wbase.transaction.TransactionProvider;
+import org.molasdin.wbase.transaction.TransactionRunner;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -35,14 +39,14 @@ import java.util.Map;
 
 public class BasicHibernateCursorFactory implements HibernateCursorFactory{
 
-    private HibernateSupport support;
+    private TransactionProvider<HibernateEngine> provider;
 
-    public BasicHibernateCursorFactory(HibernateSupport support) {
-        this.support = support;
+    public BasicHibernateCursorFactory(TransactionProvider<HibernateEngine> provider) {
+        this.provider = provider;
     }
 
-    public void setSupport(HibernateSupport support) {
-        this.support = support;
+    public void setProvider(TransactionProvider<HibernateEngine> provider) {
+        this.provider = provider;
     }
 
     @Override
@@ -71,16 +75,22 @@ public class BasicHibernateCursorFactory implements HibernateCursorFactory{
 
     @SuppressWarnings("unchecked")
     public <T> HibernateCursor<T, DetachedCriteria> newCursor() {
-        return new BasicHibernateCursor<T>(support);
+        return new BasicHibernateCursor<T>(newRunner(TransactionIsolation.READ_UNCOMMITTED));
     }
 
     @SuppressWarnings("unchecked")
     public <U> FilteredHibernateCursor<U> newFilteredCursor() {
-        return new BasicFilteredHibernateCursor<U>(support);
+        return new BasicFilteredHibernateCursor<U>(newRunner(TransactionIsolation.READ_UNCOMMITTED));
     }
 
     @SuppressWarnings("unchecked")
     public <T> HibernateCursor<T, Pair<Pair<String, String>, Map<String, Object>>> newQueryCursor() {
-        return new BasicHibernateQueryCursor<T>(support);
+        return new BasicHibernateQueryCursor<T>(newRunner(TransactionIsolation.READ_UNCOMMITTED));
+    }
+
+    private TransactionRunner<HibernateEngine> newRunner(TransactionIsolation isolation){
+        TransactionRunner<HibernateEngine> txRunner = new BasicTransactionRunner<HibernateEngine>(provider);
+        txRunner.setIsolation(isolation);
+        return txRunner;
     }
 }

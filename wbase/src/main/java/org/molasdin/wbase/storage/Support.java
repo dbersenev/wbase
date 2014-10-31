@@ -22,13 +22,13 @@ import org.molasdin.wbase.transaction.*;
  * Created by dbersenev on 15.10.2014.
  */
 public interface Support<T extends Engine> {
-    void setTransactionProviderFactory(TransactionProviderFactory<T> providerFactory);
-    TransactionProviderFactory<T> transactionProviderFactory();
+    void setTransactionProvider(TransactionProvider<T> provider);
+    TransactionProvider<T> transactionProvider();
 
     TransactionRunner<T> newRunner();
     TransactionRunner<T> newRunner(TransactionIsolation isolation);
 
-    TransactionProvider<T> newTransactionProvider();
+
     Transaction<T> newTransaction();
     Transaction<T> newTransaction(TransactionIsolation isolation);
 
