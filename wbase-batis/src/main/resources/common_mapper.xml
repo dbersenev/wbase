@@ -43,7 +43,7 @@
     </sql>
     <sql id="closeExpressionDB2">
         <bind name="start_pos" value="restriction.start?(restriction.start+1):0"/>
-        <bind name="end_pos" value="restriction.offset?(restriction.start+restriction.offset+1):null"/>
+        <bind name="end_pos" value="restriction.offset?(restriction.start+restriction.offset):null"/>
         ) as a
         <where>
             <if test="restriction.offset">

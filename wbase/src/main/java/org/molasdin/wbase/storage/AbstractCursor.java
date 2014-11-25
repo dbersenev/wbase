@@ -94,6 +94,9 @@ public abstract class AbstractCursor<T> implements Cursor<T> {
     }
 
     public List<T> postProcessData(List<T> data){
+        if(postProcessor == null){
+            return data;
+        }
         for(T entry: data){
             postProcessor.execute(entry);
         }
