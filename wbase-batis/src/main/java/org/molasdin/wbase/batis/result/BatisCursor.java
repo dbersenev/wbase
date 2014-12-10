@@ -46,7 +46,7 @@ public abstract class BatisCursor<T, U> extends AbstractCursor<T> {
             public List<T> run(Transaction<BatisEngine<U>> t) {
                 return batisData(t.engine(), createRestriction(t.engine()));
             }
-        }));
+        }, transactionDescriptor()));
     }
 
     @Override
@@ -55,7 +55,7 @@ public abstract class BatisCursor<T, U> extends AbstractCursor<T> {
             public Long run(Transaction<BatisEngine<U>> t) {
                 return batisCount(t.engine(), createRestriction(t.engine()));
             }
-        });
+        }, transactionDescriptor());
         return result != null? result:0;
     }
 

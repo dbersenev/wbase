@@ -18,6 +18,7 @@ package org.molasdin.wbase.storage;
 
 import org.apache.commons.collections4.Closure;
 import org.apache.commons.lang3.tuple.Pair;
+import org.molasdin.wbase.transaction.TransactionDescriptor;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -31,10 +32,19 @@ public abstract class AbstractCursor<T> implements Cursor<T> {
     private int pageSize;
     private int currentOffset;
     private Closure<T> postProcessor;
+    private TransactionDescriptor transactionDescriptor;
 
     private List<Pair<String, Order>> orders = new LinkedList<Pair<String, Order>>();
 
     private Map<String, Pair<FilteringMode, String>> filters = new HashMap<String, Pair<FilteringMode, String>>();
+
+    public void setTransactionDescriptor(TransactionDescriptor transactionDescriptor) {
+        this.transactionDescriptor = transactionDescriptor;
+    }
+
+    public TransactionDescriptor transactionDescriptor(){
+        return transactionDescriptor;
+    }
 
     public abstract List<T> data();
 

@@ -27,11 +27,13 @@ public interface Support<T extends Engine> {
 
     TransactionRunner<T> newRunner();
     TransactionRunner<T> newRunner(TransactionIsolation isolation);
-
+    TransactionRunner<T> newRunner(TransactionDescriptor isolation);
 
     Transaction<T> newTransaction();
     Transaction<T> newTransaction(TransactionIsolation isolation);
+    Transaction<T> newTransaction(TransactionDescriptor isolation);
 
     <U> U run(Transactional<T, U> transactional);
     <U> U run(Transactional<T, U> transactional, TransactionIsolation isolation);
+    <U> U run(Transactional<T, U> transactional, TransactionDescriptor descriptor);
 }

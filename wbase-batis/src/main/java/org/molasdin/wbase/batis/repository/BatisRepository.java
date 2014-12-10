@@ -25,6 +25,7 @@ import org.molasdin.wbase.batis.support.BatisSupport;
 import org.molasdin.wbase.storage.*;
 import org.molasdin.wbase.storage.spec.MapSearchSpecification;
 import org.molasdin.wbase.transaction.Transaction;
+import org.molasdin.wbase.transaction.TransactionDescriptor;
 import org.molasdin.wbase.transaction.Transactional;
 
 import java.io.Serializable;
@@ -72,9 +73,13 @@ public class BatisRepository<T extends Storable<T>, M extends CommonMapper<T>> i
         return queryByMap(spec.parameters());
     }
 
+    protected TransactionDescriptor defaultCursorTransactionCfg(){
+        return null;
+    }
+
     public Cursor<T> queryByMap(Map<String, Object> parameters) {
         final SearchConfiguration<T, Map<String, Object>> spec = Search.fromMap(parameters);
-        return new BatisCursor<T, M>(support, mapperId) {
+        BatisCursor<T, M> cur =  new BatisCursor<T, M>(support, mapperId) {
             @Override
             protected List<T> batisData(BatisEngine<M> ctx, Restriction restriction) {
                 return ctx.mapper().bySpec(spec.query(), restriction);
@@ -85,7 +90,8 @@ public class BatisRepository<T extends Storable<T>, M extends CommonMapper<T>> i
                 return ctx.mapper().bySpecCount(spec.query(), restriction);
             }
         };
-
+        cur.setTransactionDescriptor(defaultCursorTransactionCfg());
+        return cur;
     }
 
     @Override

@@ -48,33 +48,45 @@ public class BasicSupport<T extends Engine> implements Support<T> {
         return newRunner(isolation).invoke(transactional);
     }
 
+    public <U> U run(Transactional<T, U> transactional, TransactionDescriptor descriptor){
+        return newRunner(descriptor).invoke(transactional);
+    }
+
     @Override
     public Transaction<T> newTransaction() {
-        return newTransaction(null);
+        return newTransaction((TransactionDescriptor)null);
     }
 
     @Override
     public Transaction<T> newTransaction(TransactionIsolation isolation) {
+       return newTransaction(new BasicTransactionDescriptor(isolation));
+    }
+
+    public Transaction<T> newTransaction(TransactionDescriptor descriptor){
         TransactionProvider<T> provider = transactionProvider();
-        if (isolation != null) {
-            return provider.newTransaction(isolation);
+        if (descriptor != null) {
+            return provider.newTransaction(descriptor);
         }
         return provider.newTransaction();
     }
 
     @Override
     public TransactionRunner<T> newRunner() {
-        return newRunner(null);
+        return newRunner((TransactionDescriptor)null);
+    }
+
+    public TransactionRunner<T> newRunner(TransactionDescriptor descriptor){
+        TransactionProvider<T> provider = transactionProvider();
+        TransactionRunner<T> runner = new BasicTransactionRunner<T>(provider);
+        if (descriptor != null) {
+            runner.setDescriptor(descriptor);
+        }
+        return runner;
     }
 
     @Override
     public TransactionRunner<T> newRunner(TransactionIsolation isolation) {
-        TransactionProvider<T> provider = transactionProvider();
-        TransactionRunner<T> runner = new BasicTransactionRunner<T>(provider);
-        if (isolation != null) {
-            runner.setIsolation(isolation);
-        }
-        return runner;
+        return newRunner(new BasicTransactionDescriptor(isolation));
     }
 
     public TransactionProvider<T> newDefaultProvider(){

@@ -16,7 +16,9 @@
 
 package org.molasdin.wbase.batis.transaction;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.TransactionIsolationLevel;
@@ -45,8 +47,9 @@ public class BatisTransactionProvider<M> extends AbstractTransactionProvider<Bat
 
     @Override
     public Transaction<BatisEngine<M>> newTransaction(TransactionDescriptor descriptor) {
-        final SqlSession session =  descriptor.isolation() != null?
-                sessionFactory.openSession(TransactionIsolationLevel.values()[descriptor.isolation().jdbcCode()]):
+        TransactionIsolationLevel level = levelToBatisLevel(descriptor.isolation(), sessionFactory.getConfiguration());
+        SqlSession session =  level != null?
+                sessionFactory.openSession(level):
                 sessionFactory.openSession();
         final M m = session.getMapper(mapperClass);
         return new BatisTransaction<M>(new BasicBatisEngine<M>(session, m), session);
@@ -56,5 +59,23 @@ public class BatisTransactionProvider<M> extends AbstractTransactionProvider<Bat
     public BatisEngine<M> detachedEngine() {
         SqlSession session = sessionFactory.openSession();
         return new BasicBatisEngine<M>(session, session.getMapper(mapperClass));
+    }
+
+    private TransactionIsolationLevel levelToBatisLevel(TransactionIsolation isolation, Configuration configuration){
+        if(isolation == null){
+            return null;
+        }
+        if(StringUtils.containsIgnoreCase(configuration.getDatabaseId(), "oracle")){
+            if(TransactionIsolation.READ_UNCOMMITTED.equals(isolation)){
+                return null;
+            }
+        }
+
+        for(TransactionIsolationLevel entry: TransactionIsolationLevel.values()){
+            if(isolation.jdbcCode().equals(entry.getLevel())){
+                return entry;
+            }
+        }
+        return null;
     }
 }

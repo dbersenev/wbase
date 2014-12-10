@@ -26,4 +26,5 @@ public interface TransactionRunner<T extends Engine> {
     <U> U invoke(Transactional<T, U> transactional);
 
     void setIsolation(TransactionIsolation isolation);
+    void setDescriptor(TransactionDescriptor descriptor);
 }

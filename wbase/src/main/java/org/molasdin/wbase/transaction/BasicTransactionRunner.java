@@ -20,7 +20,7 @@ package org.molasdin.wbase.transaction;
  * Created by dbersenev on 16.10.2014.
  */
 public class BasicTransactionRunner<T extends Engine> implements TransactionRunner<T> {
-    private TransactionIsolation isolation;
+    private TransactionDescriptor descriptor;
     private TransactionProvider<T> transactionProvider;
 
     public BasicTransactionRunner() {
@@ -64,15 +64,23 @@ public class BasicTransactionRunner<T extends Engine> implements TransactionRunn
 
     @Override
     public void setIsolation(TransactionIsolation isolation) {
-        this.isolation = isolation;
+        this.descriptor = new BasicTransactionDescriptor(isolation);
     }
 
-    public TransactionIsolation isolation() {
-        return isolation;
+    @Override
+    public void setDescriptor(TransactionDescriptor descriptor) {
+        this.descriptor = descriptor;
+    }
+
+    public TransactionDescriptor descriptor() {
+        return descriptor;
     }
 
     protected Transaction<T> newTransaction() {
-        return transactionProvider.newTransaction(isolation);
+        if(descriptor != null){
+            return transactionProvider.newTransaction(descriptor);
+        }
+        return transactionProvider.newTransaction();
     }
 
 
