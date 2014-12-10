@@ -44,8 +44,8 @@ public class BasicSupport<T extends Engine> implements Support<T> {
     }
 
     @Override
-    public <U> U run(Transactional<T, U> transactional, TransactionIsolation isolation) {
-        return newRunner(isolation).invoke(transactional);
+    public <U> U runWithIsolation(Transactional<T, U> transactional, TransactionIsolation isolation) {
+        return newRunnerWithIsolation(isolation).invoke(transactional);
     }
 
     public <U> U run(Transactional<T, U> transactional, TransactionDescriptor descriptor){
@@ -54,12 +54,12 @@ public class BasicSupport<T extends Engine> implements Support<T> {
 
     @Override
     public Transaction<T> newTransaction() {
-        return newTransaction((TransactionDescriptor)null);
+        return newTransaction(null);
     }
 
     @Override
-    public Transaction<T> newTransaction(TransactionIsolation isolation) {
-       return newTransaction(new BasicTransactionDescriptor(isolation));
+    public Transaction<T> newTransactionWithIsolation(TransactionIsolation isolation) {
+       return newTransaction(TransactionDescriptors.INSTANCE.isolated(isolation));
     }
 
     public Transaction<T> newTransaction(TransactionDescriptor descriptor){
@@ -72,7 +72,7 @@ public class BasicSupport<T extends Engine> implements Support<T> {
 
     @Override
     public TransactionRunner<T> newRunner() {
-        return newRunner((TransactionDescriptor)null);
+        return newRunner(null);
     }
 
     public TransactionRunner<T> newRunner(TransactionDescriptor descriptor){
@@ -85,8 +85,8 @@ public class BasicSupport<T extends Engine> implements Support<T> {
     }
 
     @Override
-    public TransactionRunner<T> newRunner(TransactionIsolation isolation) {
-        return newRunner(new BasicTransactionDescriptor(isolation));
+    public TransactionRunner<T> newRunnerWithIsolation(TransactionIsolation isolation) {
+        return newRunner(TransactionDescriptors.INSTANCE.isolated(isolation));
     }
 
     public TransactionProvider<T> newDefaultProvider(){

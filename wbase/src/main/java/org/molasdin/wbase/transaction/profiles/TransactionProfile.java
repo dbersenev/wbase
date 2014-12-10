@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.transaction;
+package org.molasdin.wbase.transaction.profiles;
+
+import org.molasdin.wbase.transaction.TransactionIsolation;
 
 /**
- * Created by dbersenev on 15.10.2014.
+ * Created by dbersenev on 10.12.2014.
  */
-public interface TransactionRunner<T extends Engine> {
-    void setTransactionProvider(TransactionProvider<T> transactionProvider);
-    TransactionProvider<T> transactionProvider();
-
-    <U> U invoke(Transactional<T, U> transactional);
-
-    void setDescriptor(TransactionDescriptor descriptor);
+public interface TransactionProfile {
+    TransactionIsolation properIsolation(TransactionIsolation original);
 }

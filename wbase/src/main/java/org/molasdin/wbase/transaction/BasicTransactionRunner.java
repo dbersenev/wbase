@@ -63,11 +63,6 @@ public class BasicTransactionRunner<T extends Engine> implements TransactionRunn
     }
 
     @Override
-    public void setIsolation(TransactionIsolation isolation) {
-        this.descriptor = new BasicTransactionDescriptor(isolation);
-    }
-
-    @Override
     public void setDescriptor(TransactionDescriptor descriptor) {
         this.descriptor = descriptor;
     }

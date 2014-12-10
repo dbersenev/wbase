@@ -26,14 +26,14 @@ public interface Support<T extends Engine> {
     TransactionProvider<T> transactionProvider();
 
     TransactionRunner<T> newRunner();
-    TransactionRunner<T> newRunner(TransactionIsolation isolation);
+    TransactionRunner<T> newRunnerWithIsolation(TransactionIsolation isolation);
     TransactionRunner<T> newRunner(TransactionDescriptor isolation);
 
     Transaction<T> newTransaction();
-    Transaction<T> newTransaction(TransactionIsolation isolation);
+    Transaction<T> newTransactionWithIsolation(TransactionIsolation isolation);
     Transaction<T> newTransaction(TransactionDescriptor isolation);
 
     <U> U run(Transactional<T, U> transactional);
-    <U> U run(Transactional<T, U> transactional, TransactionIsolation isolation);
+    <U> U runWithIsolation(Transactional<T, U> transactional, TransactionIsolation isolation);
     <U> U run(Transactional<T, U> transactional, TransactionDescriptor descriptor);
 }

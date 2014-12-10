@@ -129,7 +129,7 @@ public class BasicHibernateRepository<T> implements HibernateRepository<T> {
 
     @Override
     public void attach(final T o) {
-        support().run(new org.molasdin.wbase.transaction.Transactional<HibernateEngine, Void>() {
+        support().runWithIsolation(new org.molasdin.wbase.transaction.Transactional<HibernateEngine, Void>() {
             @Override
             public Void run(Transaction<HibernateEngine> tx) throws Exception {
                 Session session = tx.engine().session();

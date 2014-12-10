@@ -25,6 +25,8 @@ import org.apache.ibatis.session.TransactionIsolationLevel;
 import org.molasdin.wbase.batis.support.BasicBatisEngine;
 import org.molasdin.wbase.batis.support.BatisEngine;
 import org.molasdin.wbase.transaction.*;
+import org.molasdin.wbase.transaction.profiles.ProfilesManager;
+import org.molasdin.wbase.transaction.profiles.TransactionProfile;
 
 /**
  * Created by dbersenev on 21.10.2014.
@@ -65,10 +67,12 @@ public class BatisTransactionProvider<M> extends AbstractTransactionProvider<Bat
         if(isolation == null){
             return null;
         }
-        if(StringUtils.containsIgnoreCase(configuration.getDatabaseId(), "oracle")){
-            if(TransactionIsolation.READ_UNCOMMITTED.equals(isolation)){
-                return null;
-            }
+
+        TransactionProfile profile = ProfilesManager.INSTANCE.profileFor(configuration.getDatabaseId());
+        isolation = profile.properIsolation(isolation);
+
+        if(isolation == null){
+            return null;
         }
 
         for(TransactionIsolationLevel entry: TransactionIsolationLevel.values()){

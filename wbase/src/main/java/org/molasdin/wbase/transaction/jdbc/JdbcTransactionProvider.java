@@ -18,6 +18,7 @@ package org.molasdin.wbase.transaction.jdbc;
 
 import org.molasdin.wbase.Source;
 import org.molasdin.wbase.transaction.*;
+import org.molasdin.wbase.transaction.profiles.ProfilesManager;
 
 import java.sql.Connection;
 
