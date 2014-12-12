@@ -29,7 +29,7 @@ import java.util.Map;
 public enum ProfilesManager {
     INSTANCE;
     private Map<String, TransactionProfile> profiles = new HashMap<String, TransactionProfile>();
-    private CommonTransactionProfile commonTransactionProfile;
+    private CommonTransactionProfile commonTransactionProfile = new CommonTransactionProfile();
 
     {
         profiles.put("oracle", new OracleTransactionProfile());
