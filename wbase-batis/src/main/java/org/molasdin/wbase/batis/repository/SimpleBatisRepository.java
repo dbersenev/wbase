@@ -21,10 +21,12 @@ import org.molasdin.wbase.batis.CommonMapper;
 import org.molasdin.wbase.batis.support.CommonBatisSupport;
 import org.molasdin.wbase.storage.*;
 
+import java.io.Serializable;
+
 /**
  * Created by dbersenev on 04.02.14.
  */
-public class SimpleBatisRepository<T extends Storable<T>,M extends CommonMapper<T>> extends BatisRepository<T,M> {
+public class SimpleBatisRepository<T,M extends CommonMapper<T>, K extends Serializable> extends BatisRepository<T,M, K> {
 
     public SimpleBatisRepository(SqlSessionFactory factory, Class<M> mapperClass) {
         super(new CommonBatisSupport<M>(factory, mapperClass));

@@ -75,7 +75,7 @@ public abstract class AbstractLazyDataModelCursorWrapper<T> extends LazyDataMode
     }
 
     /**
-     * Add orders to result
+     * Add orders to cursor
      * @param multiSortMeta
      */
     public void addOrders(List<SortMeta> multiSortMeta){
@@ -103,7 +103,7 @@ public abstract class AbstractLazyDataModelCursorWrapper<T> extends LazyDataMode
     }
 
     /**
-     * Add filters to result
+     * Add filters to cursor
      * @param stringStringMap
      */
     public void addFilters(Map<String, Object> stringStringMap){

@@ -33,7 +33,6 @@ public class SimpleRegistry implements Registry{
 
     @Override
     public void attach(String name, Object item) {
-        Repository<String> rp = null;
         objects.put(name, item);
     }
 
@@ -47,8 +46,8 @@ public class SimpleRegistry implements Registry{
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> Repository<T> repository(String name) {
-        return (Repository<T>)item(name, Repository.class);
+    public <T, K extends Serializable> Repository<T, K> repository(String name) {
+        return (Repository<T, K>)item(name, Repository.class);
     }
 
 

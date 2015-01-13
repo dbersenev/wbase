@@ -17,8 +17,8 @@
 package org.molasdin.wbase.batis.repository;
 
 import org.molasdin.wbase.batis.CommonMapper;
-import org.molasdin.wbase.batis.result.BatisCursor;
-import org.molasdin.wbase.batis.result.Restriction;
+import org.molasdin.wbase.batis.cursor.BatisCursor;
+import org.molasdin.wbase.batis.cursor.Restriction;
 import org.molasdin.wbase.batis.search.Search;
 import org.molasdin.wbase.batis.support.BatisEngine;
 import org.molasdin.wbase.batis.support.BatisSupport;
@@ -37,7 +37,7 @@ import java.util.Map;
 /**
  * Created by dbersenev on 13.03.14.
  */
-public class BatisRepository<T extends Storable<T>, M extends CommonMapper<T>> implements Repository<T> {
+public class BatisRepository<T, M extends CommonMapper<T>, K extends Serializable> implements Repository<T, K> {
     private String mapperId;
 
     private BatisSupport<M> support;
@@ -60,7 +60,7 @@ public class BatisRepository<T extends Storable<T>, M extends CommonMapper<T>> i
     }
 
     @Override
-    public T byId(final Serializable id) {
+    public T byId(final K id) {
         return support.run(new Transactional<BatisEngine<M>, T>() {
             @Override
             public T run(Transaction<BatisEngine<M>> t) throws Exception {
@@ -95,21 +95,6 @@ public class BatisRepository<T extends Storable<T>, M extends CommonMapper<T>> i
     }
 
     @Override
-    public <U> Cursor<U> filteredCollection(T owner, Collection<U> collection) {
-        return null;
-    }
-
-    @Override
-    public <U> List<U> simpleFilteredCollection(T owner, Collection<U> collection, String filter) {
-        return null;
-    }
-
-    @Override
-    public List<T> byQuery(String query, Map<String, ?> arguments) {
-        return null;
-    }
-
-    @Override
     public List<T> allAtOnce(String orderProp, Order order) {
         return null;
     }
@@ -130,11 +115,7 @@ public class BatisRepository<T extends Storable<T>, M extends CommonMapper<T>> i
         support.run(new Transactional<BatisEngine<M>, Void>() {
             @Override
             public Void run(Transaction<BatisEngine<M>> t) throws Exception {
-                if (o.id() != null) {
-                    t.engine().mapper().update(o);
-                } else {
-                    t.engine().mapper().save(o);
-                }
+                    t.engine().mapper().saveOrUpdate(o);
                 return null;
             }
         });
@@ -160,21 +141,9 @@ public class BatisRepository<T extends Storable<T>, M extends CommonMapper<T>> i
         support.run(new Transactional<BatisEngine<M>, Void>() {
             @Override
             public Void run(Transaction<BatisEngine<M>> t) throws Exception {
-                t.engine().mapper().remove(o.id());
+                t.engine().mapper().remove(o);
                 return null;
             }
         });
     }
-
-    @Override
-    public void refresh(T o) {
-
-    }
-
-    @Override
-    public void refreshChild(T o, Object child) {
-
-    }
-
-
 }

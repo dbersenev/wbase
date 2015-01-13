@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 
-public class BasicHibernateRepository<T> implements HibernateRepository<T> {
+public class BasicHibernateRepository<T, K extends Serializable> implements HibernateRepository<T, K> {
 
     private Class<T> clazz;
 
@@ -64,7 +64,7 @@ public class BasicHibernateRepository<T> implements HibernateRepository<T> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public T byId(final Serializable id) {
+    public T byId(final K id) {
         return support().run(new org.molasdin.wbase.transaction.Transactional<HibernateEngine, T>() {
             @Override
             public T run(Transaction<HibernateEngine> tx) throws Exception {

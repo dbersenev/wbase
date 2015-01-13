@@ -1,0 +1,97 @@
+/*
+ * Copyright 2014 Bersenev Dmitry molasdin@outlook.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.molasdin.wbase.hibernate.cursor;
+
+import org.hibernate.Session;
+import org.molasdin.wbase.hibernate.HibernateCursor;
+import org.molasdin.wbase.hibernate.HibernateEngine;
+import org.molasdin.wbase.storage.AbstractCursor;
+import org.molasdin.wbase.storage.Cursor;
+import org.molasdin.wbase.storage.SearchConfiguration;
+import org.molasdin.wbase.transaction.*;
+
+import java.util.List;
+
+/**
+ * Created by dbersenev on 24.02.14.
+ */
+public abstract class CommonHibernateCursor<T, U> extends AbstractCursor<T> implements HibernateCursor<T, U> {
+
+    private SearchConfiguration<T,U> searchConfiguration;
+    private TransactionRunner<HibernateEngine> runner;
+
+    protected CommonHibernateCursor() {
+    }
+
+    protected CommonHibernateCursor(TransactionRunner<HibernateEngine> runner) {
+        this.runner = runner;
+    }
+
+    public void setRunner(TransactionRunner<HibernateEngine> runner) {
+        this.runner = runner;
+    }
+    public TransactionRunner<HibernateEngine> runner(){
+        return runner;
+    }
+
+    public void setSearchConfiguration(SearchConfiguration<T, U> searchConfiguration) {
+        this.searchConfiguration = searchConfiguration;
+    }
+
+    public SearchConfiguration<T,U> searchSpecification(){
+        return searchConfiguration;
+    }
+
+    public String translateProperty(String original){
+        if(searchConfiguration.propertiesPrefix() != null){
+            original = searchConfiguration.propertiesPrefix().concat(".").concat(original);
+        }
+
+        if(searchConfiguration.baseProperty() == null){
+            return original;
+        }
+
+        return original.replace(searchConfiguration.baseProperty().concat("."), "");
+    }
+
+    @Override
+    public Cursor<T> copy() {
+        return null;
+    }
+
+    public List<T> data(){
+        return runner().invoke(new Transactional<HibernateEngine, List<T>>() {
+            @Override
+            public List<T> run(Transaction<HibernateEngine> tx) throws Exception {
+                return dataCallback(tx.engine().session());
+            }
+        });
+    }
+
+    public long totalRecords(){
+        return runner().invoke(new Transactional<HibernateEngine, Long>() {
+            @Override
+            public Long run(Transaction<HibernateEngine> tx) throws Exception {
+                Long result = totalCallback(tx.engine().session());
+                return result != null?result:0;
+            }
+        });
+    }
+
+    public abstract List<T> dataCallback(Session session);
+    public abstract Long totalCallback(Session session);
+}

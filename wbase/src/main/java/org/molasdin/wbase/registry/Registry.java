@@ -18,11 +18,13 @@ package org.molasdin.wbase.registry;
 
 import org.molasdin.wbase.storage.Repository;
 
+import java.io.Serializable;
+
 /**
  * Created by dbersenev on 03.02.14.
  */
 public interface Registry {
     void attach(String name, Object item);
     <T> T item(String name, Class<T> clazz);
-    <T> Repository<T> repository(String name);
+    <T, K extends Serializable> Repository<T, K> repository(String name);
 }

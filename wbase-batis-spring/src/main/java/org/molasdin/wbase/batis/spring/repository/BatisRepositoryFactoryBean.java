@@ -30,12 +30,12 @@ import org.springframework.transaction.PlatformTransactionManager;
 /**
  * Created by dbersenev on 15.09.2014.
  */
-public class BatisRepositoryFactoryBean<T extends Storable<T>, M extends CommonMapper<T>, F extends Repository<T>> implements FactoryBean<F> {
+public class BatisRepositoryFactoryBean<T extends Storable<T>, M extends CommonMapper<T>, F extends Repository<T, ?>> implements FactoryBean<F> {
 
     private SqlSessionTemplate template;
     private Class<M> mapperClass;
     private PlatformTransactionManager txManager;
-    private Class<? extends BatisRepository<T,M>> repositoryClass;
+    private Class<? extends BatisRepository<T,M, ?>> repositoryClass;
     private String mapperId;
 
     public void setTemplate(SqlSessionTemplate template) {
@@ -50,7 +50,7 @@ public class BatisRepositoryFactoryBean<T extends Storable<T>, M extends CommonM
         this.txManager = txManager;
     }
 
-    public void setRepositoryClass(Class<? extends BatisRepository<T,M>> repositoryClass) {
+    public void setRepositoryClass(Class<? extends BatisRepository<T,M, ?>> repositoryClass) {
         this.repositoryClass = repositoryClass;
     }
 
@@ -64,7 +64,7 @@ public class BatisRepositoryFactoryBean<T extends Storable<T>, M extends CommonM
         SpringBatisSupport<M> support = new SpringBatisSupport<M>(mapperClass);
         support.setTemplate(template);
         support.setTransactionManager(txManager);
-        BatisRepository<T,M> repo = ConstructorUtils.invokeExactConstructor(repositoryClass, new Object[]{support},
+        BatisRepository<T,M,?> repo = ConstructorUtils.invokeExactConstructor(repositoryClass, new Object[]{support},
                 new Class[]{BatisSupport.class});
         repo.setMapperId(mapperId);
         return (F)repo;

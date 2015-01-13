@@ -16,9 +16,11 @@
 
 package org.molasdin.wbase.storage;
 
+import java.io.Serializable;
+
 /**
  * Created by dbersenev on 04.02.14.
  */
-public interface RepositoryFactory<T> {
-    Repository<T> instance();
+public interface RepositoryFactory<T, K extends Serializable> {
+    Repository<T, K> instance();
 }

@@ -16,11 +16,51 @@
 
 package org.molasdin.wbase.hibernate;
 
+import org.molasdin.wbase.storage.Cursor;
 import org.molasdin.wbase.storage.Repository;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by dbersenev on 13.03.14.
  */
-public interface HibernateRepository<T> extends Repository<T> {
+public interface HibernateRepository<T, K extends Serializable> extends Repository<T, K> {
     void attach(T o);
+    /**
+     * Search by query. Query is specific to implementation
+     * @param query
+     * @param arguments
+     * @return
+     */
+    List<T> byQuery(String query, Map<String, ?> arguments);
+
+    /**
+     * Filter collection and return cursor immediately
+     * @param owner
+     * @param collection
+     * @param filter
+     * @param <U>
+     * @return
+     */
+    <U> List<U> simpleFilteredCollection(T owner, Collection<U> collection, String filter);
+
+    /**
+     * Make search cursor from collection
+     * @param owner
+     * @param collection
+     * @param <U>
+     * @return
+     */
+    <U> Cursor<U> filteredCollection(T owner, Collection<U> collection);
+
+    /**
+     * Refresh object fields from DB
+     * @param o
+     */
+    void refresh(T o);
+
+    void refreshChild(T o, Object child);
 }

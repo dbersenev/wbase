@@ -17,7 +17,7 @@
 package org.molasdin.wbase.batis;
 
 import org.apache.ibatis.annotations.Param;
-import org.molasdin.wbase.batis.result.Restriction;
+import org.molasdin.wbase.batis.cursor.Restriction;
 
 import java.util.List;
 import java.util.Map;

@@ -22,38 +22,11 @@ import java.util.List;
 import java.util.Map;
 
 
-public interface Repository<T>{
+public interface Repository<T, K extends Serializable>{
 
     Cursor<T> all();
 
-    T byId(Serializable id);
-
-    /**
-     * Make search result from collection
-     * @param owner
-     * @param collection
-     * @param <U>
-     * @return
-     */
-    <U> Cursor<U> filteredCollection(T owner, Collection<U> collection);
-
-    /**
-     * Filter collection and return result immediately
-     * @param owner
-     * @param collection
-     * @param filter
-     * @param <U>
-     * @return
-     */
-    <U> List<U> simpleFilteredCollection(T owner, Collection<U> collection, String filter);
-
-    /**
-     * Search by query. Query is specific to implementation
-     * @param query
-     * @param arguments
-     * @return
-     */
-    List<T> byQuery(String query, Map<String, ?> arguments);
+    T byId(K id);
 
     /**
      * All records ordered by some criteria
@@ -68,12 +41,4 @@ public interface Repository<T>{
     void merge(T o);
     void update(T o);
     void remove(T o);
-
-    /**
-     * Refresh object fields from DB
-     * @param o
-     */
-    void refresh(T o);
-
-    void refreshChild(T o, Object child);
 }

@@ -16,19 +16,15 @@
 
 package org.molasdin.wbase.batis;
 
-import org.apache.ibatis.annotations.Param;
-import org.molasdin.wbase.batis.result.Restriction;
-
 import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by dbersenev on 04.02.14.
  */
 public interface CommonMapper<T> extends PagingAwareMapper<T> {
     void save(T object);
+    void saveOrUpdate(T object);
     void update(T object);
-    void remove(Serializable id);
+    void remove(T id);
     T findById(Serializable id);
 }

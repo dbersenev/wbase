@@ -16,22 +16,13 @@
 
 package org.molasdin.wbase.hibernate;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.hibernate.SessionFactory;
 import org.hibernate.criterion.DetachedCriteria;
-import org.molasdin.wbase.hibernate.result.BasicFilteredHibernateCursor;
-import org.molasdin.wbase.hibernate.result.BasicHibernateCursor;
-import org.molasdin.wbase.hibernate.result.BasicHibernateQueryCursor;
+import org.molasdin.wbase.hibernate.cursor.BasicFilteredHibernateCursor;
+import org.molasdin.wbase.hibernate.cursor.BasicHibernateCursor;
+import org.molasdin.wbase.hibernate.cursor.BasicHibernateQueryCursor;
 import org.molasdin.wbase.storage.SearchConfiguration;
-import org.molasdin.wbase.transaction.BasicTransactionRunner;
-import org.molasdin.wbase.transaction.TransactionIsolation;
-import org.molasdin.wbase.transaction.TransactionProvider;
-import org.molasdin.wbase.transaction.TransactionRunner;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.transaction.PlatformTransactionManager;
+import org.molasdin.wbase.transaction.*;
 
 import java.util.Collection;
 import java.util.Map;
@@ -90,7 +81,7 @@ public class BasicHibernateCursorFactory implements HibernateCursorFactory{
 
     private TransactionRunner<HibernateEngine> newRunner(TransactionIsolation isolation){
         TransactionRunner<HibernateEngine> txRunner = new BasicTransactionRunner<HibernateEngine>(provider);
-        txRunner.setIsolation(isolation);
+        txRunner.setDescriptor(TransactionDescriptors.INSTANCE.isolated(isolation));
         return txRunner;
     }
 }

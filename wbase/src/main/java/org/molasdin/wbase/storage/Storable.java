@@ -24,6 +24,7 @@ import java.io.Serializable;
  * Mark class as storable in DB
  * @param <T>
  */
+@Deprecated
 public interface Storable<T> extends Serializable, Copyable<T> {
     String rowKey();
     Serializable id();
