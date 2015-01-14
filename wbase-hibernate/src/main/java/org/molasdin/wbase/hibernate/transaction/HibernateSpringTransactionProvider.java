@@ -26,13 +26,13 @@ import org.molasdin.wbase.transaction.EngineFactory;
 /**
  * Created by molasdin on 10/30/14.
  */
-public class HibernateTransactionProvider extends SpringTransactionProvider<HibernateEngine> {
+public class HibernateSpringTransactionProvider extends SpringTransactionProvider<HibernateEngine> {
     private SessionFactory sessionFactory;
 
-    public HibernateTransactionProvider() {
+    public HibernateSpringTransactionProvider() {
     }
 
-    public HibernateTransactionProvider(SessionFactory sessionFactory) {
+    public HibernateSpringTransactionProvider(SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
     }
 

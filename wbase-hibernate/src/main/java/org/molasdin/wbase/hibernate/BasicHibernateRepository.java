@@ -59,7 +59,7 @@ public class BasicHibernateRepository<T, K extends Serializable> implements Hibe
 
     @Override
     public Cursor<T> all() {
-        return support().resultFactory().createSearchResult(Search.all(clazz));
+        return support().cursorFactory().createSearchResult(Search.all(clazz));
     }
 
     @Override
@@ -77,7 +77,7 @@ public class BasicHibernateRepository<T, K extends Serializable> implements Hibe
     @Override
     public <U> Cursor<U> filteredCollection(T owner, Collection<U> collection) {
         attach(owner);
-        return support().resultFactory().createCollectionSearchResult(owner, collection);
+        return support().cursorFactory().createCollectionSearchResult(owner, collection);
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Bersenev Dmitry molasdin@outlook.com
+ * Copyright 2015 Bersenev Dmitry molasdin@outlook.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.hibernate;
+package org.molasdin.wbase.batis.annotations;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.molasdin.wbase.storage.Support;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-
-public interface HibernateSupport extends Support<HibernateEngine>{
-    SessionFactory sessionFactory();
-    void setSessionFactory(SessionFactory factory);
-
-    Session newSession();
-    Session currentSession();
-
-    HibernateCursorFactory cursorFactory();
+/**
+ * Created by dbersenev on 13.01.2015.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE})
+public @interface MappedClass {
+    Class<?> value();
 }

@@ -17,6 +17,8 @@
 package org.molasdin.wbase.batis.spring.repository;
 
 import org.apache.commons.beanutils.ConstructorUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.molasdin.wbase.batis.BatisUtil;
 import org.molasdin.wbase.batis.CommonMapper;
 import org.molasdin.wbase.batis.repository.BatisRepository;
 import org.molasdin.wbase.batis.spring.support.SpringBatisSupport;
@@ -30,7 +32,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 /**
  * Created by dbersenev on 15.09.2014.
  */
-public class BatisRepositoryFactoryBean<T extends Storable<T>, M extends CommonMapper<T>, F extends Repository<T, ?>> implements FactoryBean<F> {
+public class BatisRepositoryFactoryBean<T, M extends CommonMapper<T>, F extends Repository<T, ?>> implements FactoryBean<F> {
 
     private SqlSessionTemplate template;
     private Class<M> mapperClass;
@@ -66,7 +68,12 @@ public class BatisRepositoryFactoryBean<T extends Storable<T>, M extends CommonM
         support.setTransactionManager(txManager);
         BatisRepository<T,M,?> repo = ConstructorUtils.invokeExactConstructor(repositoryClass, new Object[]{support},
                 new Class[]{BatisSupport.class});
-        repo.setMapperId(mapperId);
+        Class<T> mappedClass = BatisUtil.mappedClass(mapperClass);
+        if(StringUtils.isBlank(mapperId)){
+            repo.setMapperId(mappedClass.getCanonicalName());
+        } else{
+            repo.setMapperId(mapperId);
+        }
         return (F)repo;
     }
 

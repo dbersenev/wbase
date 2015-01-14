@@ -18,7 +18,8 @@ package org.molasdin.wbase.hibernate;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.molasdin.wbase.hibernate.transaction.HibernateTransactionProvider;
+import org.molasdin.wbase.hibernate.transaction.BasicHibernateTransactionProvider;
+import org.molasdin.wbase.hibernate.transaction.HibernateSpringTransactionProvider;
 import org.molasdin.wbase.spring.transaction.SpringTransactionProvider;
 import org.molasdin.wbase.storage.BasicSupport;
 import org.molasdin.wbase.transaction.TransactionProvider;
@@ -30,18 +31,12 @@ public class BasicHibernateSupport extends BasicSupport<HibernateEngine> impleme
 
     private HibernateCursorFactory cursorFactory;
 
-    private PlatformTransactionManager tx;
-
-    public void setTransactionManager(PlatformTransactionManager tx) {
-        this.tx = tx;
-    }
-
     public void setCursorFactory(HibernateCursorFactory resultFactory) {
         this.cursorFactory = resultFactory;
     }
 
     public Session currentSession(){
-        return factory().getCurrentSession();
+        return sessionFactory().getCurrentSession();
     }
 
     public Session newSession(){
@@ -52,19 +47,19 @@ public class BasicHibernateSupport extends BasicSupport<HibernateEngine> impleme
         this.sessionFactory = factory;
     }
 
-    public SessionFactory factory(){
+    public SessionFactory sessionFactory(){
         return sessionFactory;
     }
 
     @Override
-    public HibernateCursorFactory resultFactory() {
+    public HibernateCursorFactory cursorFactory() {
         return cursorFactory;
     }
 
     @Override
     public TransactionProvider<HibernateEngine> newDefaultProvider() {
-        SpringTransactionProvider<HibernateEngine> provider = new HibernateTransactionProvider(sessionFactory);
-        provider.setTransactionManager(tx);
+        BasicHibernateTransactionProvider provider = new BasicHibernateTransactionProvider();
+        provider.setSessionFactory(sessionFactory);
         return provider;
     }
 

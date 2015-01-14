@@ -100,4 +100,5 @@
         select count(*) from <include refid="fromCommon"/>
         <include refid="specCommon"/>
     </sql>
+
 </mapper>

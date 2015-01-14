@@ -19,8 +19,13 @@ package org.molasdin.wbase.batis;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.molasdin.wbase.batis.annotations.MappedClass;
 import org.molasdin.wbase.registry.Registry;
 import org.molasdin.wbase.registry.RegistryManager;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 /**
  * Created by dbersenev on 17.02.14.
@@ -34,4 +39,26 @@ public class BatisUtil {
             throw new RuntimeException(ex);
         }
     }
+
+    @SuppressWarnings("unchecked")
+    public static <T, M extends CommonMapper<T>> Class<T> mappedClass(Class<M> mapperClass){
+        for(Annotation entry: mapperClass.getAnnotations()){
+            if(entry instanceof MappedClass){
+                return (Class)((MappedClass)entry).value();
+            }
+        }
+
+        for(Class<?> entry: mapperClass.getInterfaces()) {
+            if(CommonMapper.class.isAssignableFrom(entry)){
+                for(Type mEntry: entry.getGenericInterfaces()){
+                    if(mEntry.equals(CommonMapper.class)){
+                        return (Class)((ParameterizedType)mEntry).getActualTypeArguments()[0];
+                    }
+                }
+            }
+        }
+
+        throw new IllegalArgumentException("CommonMapper extensions must be annotated with MappedClass or provide Generic Type info");
+    }
+
 }
