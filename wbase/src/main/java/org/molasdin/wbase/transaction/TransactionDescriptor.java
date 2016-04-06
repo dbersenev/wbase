@@ -20,6 +20,6 @@ package org.molasdin.wbase.transaction;
  * Created by dbersenev on 28.10.2014.
  */
 public interface TransactionDescriptor {
-    void setIsolation(TransactionIsolation isolation);
     TransactionIsolation isolation();
+    Requirement requirement();
 }

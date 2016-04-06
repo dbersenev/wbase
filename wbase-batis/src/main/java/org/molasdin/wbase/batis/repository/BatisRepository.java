@@ -17,133 +17,71 @@
 package org.molasdin.wbase.batis.repository;
 
 import org.molasdin.wbase.batis.CommonMapper;
-import org.molasdin.wbase.batis.cursor.BatisCursor;
-import org.molasdin.wbase.batis.cursor.Restriction;
-import org.molasdin.wbase.batis.search.Search;
-import org.molasdin.wbase.batis.support.BatisEngine;
-import org.molasdin.wbase.batis.support.BatisSupport;
+import org.molasdin.wbase.batis.support.BatisMapperEngine;
+import org.molasdin.wbase.batis.support.BatisMapperSupport;
 import org.molasdin.wbase.storage.*;
-import org.molasdin.wbase.storage.spec.MapSearchSpecification;
 import org.molasdin.wbase.transaction.Transaction;
 import org.molasdin.wbase.transaction.TransactionDescriptor;
-import org.molasdin.wbase.transaction.Transactional;
+import org.molasdin.wbase.transaction.UserTransaction;
 
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by dbersenev on 13.03.14.
  */
 public class BatisRepository<T, M extends CommonMapper<T>, K extends Serializable> implements Repository<T, K> {
-    private String mapperId;
 
-    private BatisSupport<M> support;
+    private BatisMapperSupport support;
+    private Class<M> mapperClass;
 
-    public BatisSupport<M> support() {
+
+    public BatisMapperSupport support() {
         return support;
     }
 
-    public BatisRepository(BatisSupport<M> support) {
+    public BatisRepository(BatisMapperSupport support, Class<M> mapperClass) {
         this.support = support;
-    }
-
-    public void setMapperId(String mapperId) {
-        this.mapperId = mapperId;
-    }
-
-    @Override
-    public Cursor<T> all() {
-        return queryByMap(Collections.<String, Object>emptyMap());
+        this.mapperClass = mapperClass;
     }
 
     @Override
     public T byId(final K id) {
-        return support.run(new Transactional<BatisEngine<M>, T>() {
-            @Override
-            public T run(Transaction<BatisEngine<M>> t) throws Exception {
-                return t.engine().mapper().findById(id);
-            }
-        });
+        try(UserTransaction<BatisMapperEngine> tx = newTransaction()){
+            T r = tx.engine().mapper(mapperClass).findById(id);
+            tx.commit();
+            return r;
+        }
     }
 
-    public Cursor<T> queryBySpec(MapSearchSpecification<T> spec) {
-        return queryByMap(spec.parameters());
-    }
-
-    protected TransactionDescriptor defaultCursorTransactionCfg(){
+    protected TransactionDescriptor defaultCursorTransactionCfg() {
         return null;
     }
-
-    public Cursor<T> queryByMap(Map<String, Object> parameters) {
-        final SearchConfiguration<T, Map<String, Object>> spec = Search.fromMap(parameters);
-        BatisCursor<T, M> cur =  new BatisCursor<T, M>(support, mapperId) {
-            @Override
-            protected List<T> batisData(BatisEngine<M> ctx, Restriction restriction) {
-                return ctx.mapper().bySpec(spec.query(), restriction);
-            }
-
-            @Override
-            protected Long batisCount(BatisEngine<M> ctx, Restriction restriction) {
-                return ctx.mapper().bySpecCount(spec.query(), restriction);
-            }
-        };
-        cur.setTransactionDescriptor(defaultCursorTransactionCfg());
-        return cur;
-    }
-
-    @Override
-    public List<T> allAtOnce(String orderProp, Order order) {
-        return null;
+    protected UserTransaction<BatisMapperEngine> newTransaction(){
+        return support.newTransaction(defaultCursorTransactionCfg());
     }
 
     @Override
     public void save(final T o) {
-        support.run(new Transactional<BatisEngine<M>, Void>() {
-            @Override
-            public Void run(Transaction<BatisEngine<M>> t) throws Exception {
-                t.engine().mapper().save(o);
-                return null;
-            }
-        });
-    }
-
-    @Override
-    public void saveOrUpdate(final T o) {
-        support.run(new Transactional<BatisEngine<M>, Void>() {
-            @Override
-            public Void run(Transaction<BatisEngine<M>> t) throws Exception {
-                    t.engine().mapper().saveOrUpdate(o);
-                return null;
-            }
-        });
-    }
-
-    @Override
-    public void merge(T o) {
+        try(UserTransaction<BatisMapperEngine> tx = newTransaction()){
+            tx.engine().mapper(mapperClass).save(o);
+            tx.commit();
+        }
     }
 
     @Override
     public void update(final T o) {
-        support.run(new Transactional<BatisEngine<M>, Void>() {
-            @Override
-            public Void run(Transaction<BatisEngine<M>> t) throws Exception {
-                t.engine().mapper().update(o);
-                return null;
-            }
-        });
+        try(UserTransaction<BatisMapperEngine> tx = newTransaction()){
+            tx.engine().mapper(mapperClass).update(o);
+            tx.commit();
+        }
     }
 
     @Override
     public void remove(final T o) {
-        support.run(new Transactional<BatisEngine<M>, Void>() {
-            @Override
-            public Void run(Transaction<BatisEngine<M>> t) throws Exception {
-                t.engine().mapper().remove(o);
-                return null;
-            }
-        });
+        try(UserTransaction<BatisMapperEngine> tx = newTransaction()){
+            tx.engine().mapper(mapperClass).remove(o);
+            tx.commit();
+        }
     }
 }

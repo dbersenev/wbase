@@ -17,7 +17,7 @@
 package org.molasdin.wbase.batis.collections;
 
 import org.molasdin.wbase.collections.list.ExtendedList;
-import org.molasdin.wbase.storage.Cursor;
+import org.molasdin.wbase.storage.cursor.BiDirectionalBatchCursor;
 import org.molasdin.wbase.storage.Order;
 
 import java.util.AbstractList;
@@ -46,12 +46,12 @@ public class BatisList<T> extends AbstractList<T> implements ExtendedList<T> {
     }
 
     @Override
-    public Cursor<T> newCursor() {
+    public BiDirectionalBatchCursor<T> newCursor() {
         return null;
     }
 
     @Override
-    public Cursor<T> currentCursor() {
+    public BiDirectionalBatchCursor<T> currentCursor() {
         return null;
     }
 }

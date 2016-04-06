@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Bersenev Dmitry molasdin@outlook.com
+ * Copyright 2015 Bersenev Dmitry molasdin@outlook.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,12 @@
 
 package org.molasdin.wbase.batis.support;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.ibatis.session.SqlSession;
 import org.molasdin.wbase.storage.Support;
-import org.molasdin.wbase.transaction.Transactional;
 
 /**
- * Created by dbersenev on 13.03.14.
+ * Created by dbersenev on 23.11.2015.
  */
-public interface BatisSupport<M> extends Support<BatisEngine<M>>{
+public interface BatisSupport<T extends BatisEngine> extends Support<T> {
     SqlSession session();
-    M mapper();
 }

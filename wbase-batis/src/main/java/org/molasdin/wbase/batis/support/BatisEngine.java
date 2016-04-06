@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Bersenev Dmitry molasdin@outlook.com
+ * Copyright 2015 Bersenev Dmitry molasdin@outlook.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,12 @@
 package org.molasdin.wbase.batis.support;
 
 import org.apache.ibatis.session.SqlSession;
-import org.molasdin.wbase.transaction.Engine;
-import org.molasdin.wbase.transaction.Transactional;
+import org.molasdin.wbase.transaction.manager.Engine;
 
 /**
- * Created by dbersenev on 31.01.14.
+ * Created by dbersenev on 23.11.2015.
  */
-public interface BatisEngine<M> extends Engine {
+public interface BatisEngine extends Engine {
     SqlSession session();
-    M mapper();
     String columnByProperty(String property, String resultMap);
 }

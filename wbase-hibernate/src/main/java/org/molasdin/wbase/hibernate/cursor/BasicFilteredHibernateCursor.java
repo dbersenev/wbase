@@ -16,100 +16,38 @@
 
 package org.molasdin.wbase.hibernate.cursor;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.LockOptions;
+import org.hibernate.Query;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.molasdin.wbase.hibernate.FilteredHibernateCursor;
 import org.molasdin.wbase.hibernate.HibernateEngine;
-import org.molasdin.wbase.storage.Order;
-import org.molasdin.wbase.storage.Cursor;
-import org.molasdin.wbase.transaction.TransactionRunner;
+import org.molasdin.wbase.storage.cursor.DelegatingBiDirectionalBatchCursor;
+import org.molasdin.wbase.transaction.manager.TransactionManager;
 
-import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 
-public class BasicFilteredHibernateCursor<T> extends CommonHibernateCursor<T, Pair<?, Collection<T>>> implements FilteredHibernateCursor<T> {
+public class BasicFilteredHibernateCursor<T> extends DelegatingBiDirectionalBatchCursor<T, HibernateEngine> {
 
-    public BasicFilteredHibernateCursor() {
-    }
 
-    public BasicFilteredHibernateCursor(TransactionRunner<HibernateEngine> runner) {
-        super(runner);
-    }
-
-    private final static String FILTER_ORDER = "this.%s %s";
-    private final static String FILTER_FILTER = "upper(str(this.%s)) ilike %s%%";
-
-    private final static String ORDER_ASC = "asc";
-    private final static String ORDER_DESC = "desc";
-
-    private Collection<T> collectionProxy;
+    private Function<Session, Query> query;
     private Object owner;
-    private SessionFactory sessionFactory;
 
-    public void setOwner(Object owner) {
+    public BasicFilteredHibernateCursor(TransactionManager<HibernateEngine> pm, Function<Session, Query> query,
+                                        Object owner, long count) {
+        super(pm);
+        this.query = query;
+        setSize(count);
         this.owner = owner;
     }
 
-    public void setCollectionProxy(Collection<T> collectionProxy) {
-        this.collectionProxy = collectionProxy;
-    }
-
-    public void setSessionFactory(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
-    }
-
+    @Override
     @SuppressWarnings("unchecked")
-    @Override
-    public List<T> dataCallback(Session session) {
-        StringBuilder builder = new StringBuilder();
-        session.buildLockRequest(LockOptions.NONE).lock(owner);
-        builder.append(populateFilters());
-        builder.append(' ');
-
-        List<Pair<String, Order>> orders = orders();
-        if(!orders.isEmpty()){
-            builder.append("order by ");
-            boolean added = false;
-            for(Pair<String, Order> order: orders){
-                if(added){
-                    builder.append(",");
-                }
-                builder.append(String.format(FILTER_ORDER, order.getLeft(), Order.ASC.equals(order.getRight()) ? ORDER_ASC : ORDER_DESC));
-                added = true;
-            }
-            builder.append(' ');
-        }
-
-        return postProcessData((List<T>)session.createFilter(collectionProxy, builder.toString())
-                .setFirstResult(calculatedRowOffset())
-                .setMaxResults(pageSize())
-                .list());
+    protected List<T> loadTx(HibernateEngine ctx) {
+        ctx.session().buildLockRequest(LockOptions.NONE).lock(owner);
+        return  (List<T>)query.apply(ctx.session()).setFirstResult((int)currentOffset())
+                .setMaxResults((int)pageSize())
+                .list();
     }
 
-    private String populateFilters(){
-        StringBuilder query = new StringBuilder();
-        if(filters().size() > 0){
-            for(String prop: filters().keySet()){
-                query.append(String.format(FILTER_FILTER, prop, filters().get(prop).getRight().toUpperCase()));
-            }
-        }
-        return query.toString();
-    }
-
-    @Override
-    public Long totalCallback(Session session) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("select count(*) ");
-        builder.append(populateFilters());
-        session.buildLockRequest(LockOptions.NONE).lock(owner);
-        return (Long)session.createFilter(collectionProxy, builder.toString()).uniqueResult();
-    }
-
-    @Override
-    public Cursor<T> copy() {
-        return null;
-    }
 }

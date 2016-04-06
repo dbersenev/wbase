@@ -16,54 +16,49 @@
 
 package org.molasdin.wbase.jsf.storage.adapters;
 
-import org.molasdin.wbase.storage.Cursor;
+import org.molasdin.wbase.storage.MutableFilterAndOrder;
+import org.molasdin.wbase.storage.cursor.ExtBiDirectionalCursorFactory;
 import org.primefaces.model.SortMeta;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Primefaces wrapper for Cursor
+ * Primefaces wrapper for BiDirectionalBatchCursor
  *
  * @param <T>
  */
 public class LazyDataModelCursorWrapper<T> extends AbstractLazyDataModelCursorWrapper<T> {
 
-
-    private List<T> snapshot = Collections.emptyList();
-    private int count;
-
-    public LazyDataModelCursorWrapper(Cursor<T> result) {
-        super(result);
+    public LazyDataModelCursorWrapper(ExtBiDirectionalCursorFactory<T> extBiDirectionalCursorFactory) {
+        super(extBiDirectionalCursorFactory);
     }
 
     @Override
     public List<T> load(int row, int newPageSize, List<SortMeta> multiSortMeta, Map<String, Object> stringStringMap) {
-        addOrders(multiSortMeta);
-        addFilters(stringStringMap);
+        MutableFilterAndOrder fo = null;
+        if(!multiSortMeta.isEmpty() && !stringStringMap.isEmpty()){
+            fo = new MutableFilterAndOrder();
+            addOrders(multiSortMeta, fo);
+            addFilters(stringStringMap, fo);
+        }
+
+        if (cursor() == null || newPageSize != pageSize() || isUnstableCursor()) {
+            cursorFactory().setFilterAndOrder(fo);
+            setCursor(cursorFactory().newCursor(newPageSize));
+        }
+
+        if (row != pageNumber()) {
+            cursor().setCurrentPage(pageNumber());
+        }
+
         processRowParameters(row, newPageSize);
 
-        if (row != pageNumber() || newPageSize != pageSize()) {
-            setCountRetrieved(false);
-        }
-
-        if (isCountRetrieved() && !snapshot.isEmpty()) {
-            return snapshot;
-        }
-
-        result().setPageSize(newPageSize);
-        result().setCurrentOffset(row);
-        snapshot = result().data();
-        return snapshot;
+        return cursor().data();
     }
 
     @Override
     public int getRowCount() {
-        if (!isCountRetrieved()) {
-            count = (int) result().totalRecords();
-            setCountRetrieved(true);
-        }
-        return count;
+        return (int)cursor().size();
     }
 }

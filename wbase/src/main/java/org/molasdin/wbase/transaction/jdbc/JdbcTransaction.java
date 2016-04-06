@@ -16,9 +16,7 @@
 
 package org.molasdin.wbase.transaction.jdbc;
 
-import org.molasdin.wbase.Source;
 import org.molasdin.wbase.transaction.AbstractTransaction;
-import org.molasdin.wbase.transaction.EngineFactory;
 import org.molasdin.wbase.transaction.Transaction;
 
 import java.sql.Connection;
@@ -27,20 +25,29 @@ import java.sql.Savepoint;
 /**
  * Created by dbersenev on 16.10.2014.
  */
-public class JdbcTransaction extends AbstractTransaction<JdbcEngine> {
+public class JdbcTransaction extends AbstractTransaction {
     private Savepoint savepoint;
     private Connection connection;
     private Boolean autocommit;
-    private Source<Connection> source;
+    private int isolation;
 
-   /* public JdbcTransaction(Source<Connection> source) {
-        this.source = source;
-    }*/
-
-    public JdbcTransaction(JdbcEngine engine, Connection connection, Boolean autocommit) {
-        super(engine);
+    public JdbcTransaction(Connection connection, Boolean autocommit) {
         this.connection = connection;
         this.autocommit = autocommit;
+    }
+
+    public JdbcTransaction(Connection connection, Savepoint savepoint) {
+        this.savepoint = savepoint;
+        this.connection = connection;
+    }
+
+    public void setIsolation(int isolation) {
+        this.isolation = isolation;
+    }
+
+    @Override
+    public void begin() {
+
     }
 
     public void setSavepoint(Savepoint savepoint) {
@@ -51,12 +58,10 @@ public class JdbcTransaction extends AbstractTransaction<JdbcEngine> {
     public void commit() {
         try {
             connection.commit();
-            if(!isNested()){
-                connection.setAutoCommit(autocommit);
-            }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+        super.commit();
     }
 
     @Override
@@ -70,34 +75,22 @@ public class JdbcTransaction extends AbstractTransaction<JdbcEngine> {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+        super.rollback();
     }
 
     @Override
     public void close() {
-        super.close();
-        if(isNested()){
-            return;
-        }
         try{
-            engine().close();
+            connection.setTransactionIsolation(isolation);
             if(connection.isClosed()){
                 return;
             }
-            connection.close();
+            if(savepoint == null){
+                connection.setAutoCommit(autocommit);
+                connection.close();
+            }
         } catch (Exception ex){
             throw new RuntimeException(ex);
         }
-    }
-
-    @Override
-    public Transaction<JdbcEngine> nested() {
-        JdbcTransaction nested = new JdbcTransaction(engine(), connection, autocommit);
-        nested.setNested(true);
-        try {
-            nested.setSavepoint(connection.setSavepoint());
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-        return nested;
     }
 }

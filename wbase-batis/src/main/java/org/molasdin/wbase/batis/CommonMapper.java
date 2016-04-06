@@ -21,7 +21,7 @@ import java.io.Serializable;
 /**
  * Created by dbersenev on 04.02.14.
  */
-public interface CommonMapper<T> extends PagingAwareMapper<T> {
+public interface CommonMapper<T>{
     void save(T object);
     void saveOrUpdate(T object);
     void update(T object);

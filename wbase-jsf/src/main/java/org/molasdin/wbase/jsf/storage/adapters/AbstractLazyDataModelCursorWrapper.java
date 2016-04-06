@@ -17,11 +17,12 @@
 package org.molasdin.wbase.jsf.storage.adapters;
 
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.molasdin.wbase.storage.Cursor;
+import org.molasdin.wbase.storage.MutableFilterAndOrder;
 import org.molasdin.wbase.storage.FilteringMode;
 import org.molasdin.wbase.storage.Order;
+import org.molasdin.wbase.storage.cursor.BiDirectionalBatchCursor;
+import org.molasdin.wbase.storage.cursor.ExtBiDirectionalCursorFactory;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortMeta;
 import org.primefaces.model.SortOrder;
@@ -33,32 +34,38 @@ import java.util.*;
  */
 public abstract class AbstractLazyDataModelCursorWrapper<T> extends LazyDataModel<T> {
 
-    private Cursor<T> result;
+    private ExtBiDirectionalCursorFactory<T> extBiDirectionalCursorFactory;
+    private BiDirectionalBatchCursor<T> biDirectionalBatchCursor;
     private Map<String, SortOrder> sortOrders = new HashMap<String, SortOrder>();
-    private boolean countRetrieved;
     private Map<String, Object> filters;
     private int pageNumber;
     private int pageSize;
+    private boolean unstableCursor = false;
     private List<SortMeta> defaultSort = new LinkedList<SortMeta>();
 
-    public AbstractLazyDataModelCursorWrapper(Cursor<T> result) {
-        this.result = result;
+    public AbstractLazyDataModelCursorWrapper(ExtBiDirectionalCursorFactory<T> extBiDirectionalCursorFactory) {
+        this.extBiDirectionalCursorFactory = extBiDirectionalCursorFactory;
     }
 
-    public Cursor<T> result(){
-        return result;
+
+    public void setUnstableCursor(boolean unstableCursor) {
+        this.unstableCursor = unstableCursor;
     }
 
-    /**
-     * Set flag which control need to retrieve count from the store
-     * @param countRetrieved
-     */
-    public void setCountRetrieved(boolean countRetrieved) {
-        this.countRetrieved = countRetrieved;
+    public boolean isUnstableCursor() {
+        return unstableCursor;
     }
 
-    public boolean isCountRetrieved(){
-        return countRetrieved;
+    public ExtBiDirectionalCursorFactory<T> cursorFactory() {
+        return extBiDirectionalCursorFactory;
+    }
+
+    public BiDirectionalBatchCursor<T> cursor() {
+        return biDirectionalBatchCursor;
+    }
+
+    public void setCursor(BiDirectionalBatchCursor<T> biDirectionalBatchCursor) {
+        this.biDirectionalBatchCursor = biDirectionalBatchCursor;
     }
 
     /**
@@ -75,50 +82,50 @@ public abstract class AbstractLazyDataModelCursorWrapper<T> extends LazyDataMode
     }
 
     /**
-     * Add orders to cursor
+     * Add orders to biDirectionalBatchCursor
      * @param multiSortMeta
      */
-    public void addOrders(List<SortMeta> multiSortMeta){
+    public void addOrders(List<SortMeta> multiSortMeta, MutableFilterAndOrder fo){
         boolean multiSortEmpty = multiSortMeta == null || multiSortMeta.isEmpty();
         if (!defaultSort.isEmpty() || !multiSortEmpty){
-            result.orders().clear();
+            fo.clearOrders();
             if(multiSortEmpty && !defaultSort.isEmpty()){
                 multiSortMeta = defaultSort;
             }
             for(SortMeta meta: multiSortMeta){
-                result.orders().add(Pair.of(meta.getSortField(), meta.getSortOrder().equals(SortOrder.ASCENDING) ?
-                        Order.ASC : Order.DESC));
+                fo.addOrder(meta.getSortField(), meta.getSortOrder().equals(SortOrder.ASCENDING) ?
+                        Order.ASC : Order.DESC);
                 if(!sortOrders.containsKey(meta.getSortField()) ||
                         !sortOrders.get(meta.getSortField()).equals(meta.getSortOrder())){
                     sortOrders.put(meta.getSortField(), meta.getSortOrder());
-                    countRetrieved = false;
+                    biDirectionalBatchCursor = null;
                 }
             }
         } else{
             if(!sortOrders.isEmpty()){
                 sortOrders.clear();
-                countRetrieved = false;
+                biDirectionalBatchCursor = null;
             }
         }
     }
 
     /**
-     * Add filters to cursor
+     * Add filters to biDirectionalBatchCursor
      * @param stringStringMap
      */
-    public void addFilters(Map<String, Object> stringStringMap){
+    public void addFilters(Map<String, Object> stringStringMap, MutableFilterAndOrder fo){
         if (stringStringMap.size() > 0) {
             if (!stringStringMap.equals(filters)) {
                 for (String key : stringStringMap.keySet()) {
-                    result.filters().put(key, new ImmutablePair<FilteringMode, String>(FilteringMode.START, ObjectUtils.toString(stringStringMap.get(key))));
+                    fo.addFilter(key, ObjectUtils.toString(stringStringMap.get(key)), FilteringMode.START);
                 }
-                countRetrieved = false;
+                biDirectionalBatchCursor = null;
             }
         } else {
             if (filters != null && filters.size() > 0) {
-                countRetrieved = false;
+                biDirectionalBatchCursor = null;
             }
-            result.filters().clear();
+            fo.clearFilters();
         }
         filters = stringStringMap;
     }
@@ -129,9 +136,6 @@ public abstract class AbstractLazyDataModelCursorWrapper<T> extends LazyDataMode
      * @param newPageSize
      */
     public void processRowParameters(int row, int newPageSize){
-        if (row != pageNumber || newPageSize != pageSize) {
-            countRetrieved = false;
-        }
         pageNumber = row;
         pageSize = newPageSize;
     }
@@ -150,14 +154,6 @@ public abstract class AbstractLazyDataModelCursorWrapper<T> extends LazyDataMode
             rowIndex = -1;
         }
         super.setRowIndex(rowIndex);
-    }
-
-    /**
-     * Clone wrapper
-     * @return
-     */
-    public LazyDataModel<T> copy(){
-        return new LazyDataModelCursorWrapper<T>(result.copy());
     }
 
     public List<T> load(int row, int newPageSize, String property, SortOrder sortOrder, Map<String, Object> stringStringMap) {

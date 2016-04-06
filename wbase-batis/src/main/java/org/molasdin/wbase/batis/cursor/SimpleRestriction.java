@@ -19,8 +19,6 @@ package org.molasdin.wbase.batis.cursor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.molasdin.wbase.storage.Order;
 
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -28,79 +26,41 @@ import java.util.Map;
  * Created by dbersenev on 06.12.13.
  */
 public class SimpleRestriction implements Restriction {
-    private int start;
-    private int offset;
-    private List<Pair<String, Order>> orders = new LinkedList<Pair<String, Order>>();
-    private Map<String,String> filters = new HashMap<String, String>();
 
-    public int getStart() {
+    private Long start;
+    private Long offset;
+    private List<Pair<String, Order>> orders;
+    private Map<String, String> filters;
+
+    public SimpleRestriction(Long start, List<Pair<String, Order>> orders, Map<String, String> filters) {
+        this(start, null, orders, filters);
+    }
+
+    public SimpleRestriction(List<Pair<String, Order>> orders, Map<String, String> filters) {
+        this(null, null, orders, filters);
+    }
+
+    public SimpleRestriction(Long start, Long size, List<Pair<String, Order>> orders, Map<String, String> filters) {
+        this.orders = orders;
+        this.filters = filters;
+        this.start = offset;
+        this.offset = start + size;
+    }
+
+    public Long getStart() {
         return start;
     }
 
-    public void setStart(int start) {
-        this.start = start;
-    }
-
-    public int getOffset() {
+    public Long getSize() {
         return offset;
-    }
-
-    public void setOffset(int offset) {
-        this.offset = offset;
     }
 
     public List<Pair<String, Order>> getOrders() {
         return orders;
     }
 
-    public void setOrders(List<Pair<String, Order>> orders) {
-        this.orders = orders;
-    }
-
     public Map<String, String> getFilters() {
         return filters;
     }
 
-    public void setFilters(Map<String, String> filters) {
-        this.filters = filters;
-    }
-
-    public SimpleRestriction withRange(int start, int offset){
-        setStart(start);
-        setOffset(offset);
-        return this;
-    }
-
-    public SimpleRestriction withOrder(String property, Order propOrder){
-        getOrders().add(Pair.of(property, propOrder));
-        return this;
-    }
-
-    public SimpleRestriction withOrder(Pair<String, Order> order){
-        getOrders().add(order);
-        return this;
-    }
-
-    public SimpleRestriction withOrders(List<Pair<String, Order>> orders){
-        getOrders().addAll(orders);
-        return this;
-    }
-
-    public SimpleRestriction withFilters(Map<String, String> filters){
-        setFilters(filters);
-        return this;
-    }
-
-    public static SimpleRestriction create(){
-        return new SimpleRestriction();
-    }
-
-    public static SimpleRestriction create(int start, int offset, Pair<String, Order> order, Map<String, String> filters){
-        SimpleRestriction simpleRestriction = new SimpleRestriction();
-        simpleRestriction.setStart(start);
-        simpleRestriction.setOffset(offset);
-        simpleRestriction.getOrders().add(order);
-        simpleRestriction.setFilters(filters);
-        return simpleRestriction;
-    }
 }

@@ -16,8 +16,9 @@
 
 package org.molasdin.wbase.hibernate;
 
-import org.molasdin.wbase.storage.Cursor;
+import org.molasdin.wbase.storage.cursor.BiDirectionalBatchCursor;
 import org.molasdin.wbase.storage.Repository;
+import org.molasdin.wbase.storage.cursor.ExtBiDirectionalCursorFactory;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -54,7 +55,7 @@ public interface HibernateRepository<T, K extends Serializable> extends Reposito
      * @param <U>
      * @return
      */
-    <U> Cursor<U> filteredCollection(T owner, Collection<U> collection);
+    <U> ExtBiDirectionalCursorFactory<U> filteredCollection(T owner, Collection<U> collection);
 
     /**
      * Refresh object fields from DB

@@ -18,12 +18,10 @@ package org.molasdin.wbase.hibernate;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.molasdin.wbase.hibernate.transaction.BasicHibernateTransactionProvider;
-import org.molasdin.wbase.hibernate.transaction.HibernateSpringTransactionProvider;
-import org.molasdin.wbase.spring.transaction.SpringTransactionProvider;
+import org.molasdin.wbase.hibernate.transaction.BasicHibernateTransactionManager;
 import org.molasdin.wbase.storage.BasicSupport;
-import org.molasdin.wbase.transaction.TransactionProvider;
-import org.springframework.transaction.PlatformTransactionManager;
+import org.molasdin.wbase.transaction.DetachedEngine;
+import org.molasdin.wbase.transaction.manager.TransactionManager;
 
 public class BasicHibernateSupport extends BasicSupport<HibernateEngine> implements HibernateSupport {
 
@@ -57,20 +55,20 @@ public class BasicHibernateSupport extends BasicSupport<HibernateEngine> impleme
     }
 
     @Override
-    public TransactionProvider<HibernateEngine> newDefaultProvider() {
-        BasicHibernateTransactionProvider provider = new BasicHibernateTransactionProvider();
+    public TransactionManager<HibernateEngine> newDefaultProvider() {
+        BasicHibernateTransactionManager provider = new BasicHibernateTransactionManager();
         provider.setSessionFactory(sessionFactory);
         return provider;
     }
 
     public void init(){
         if(cursorFactory == null){
-            cursorFactory = new BasicHibernateCursorFactory(transactionProvider());
+            cursorFactory = new BasicHibernateCursorFactory(defaultTransactionProvider());
         }
     }
 
-    public HibernateEngine currentEngine(){
-        return transactionProvider().detachedEngine();
+    public DetachedEngine<HibernateEngine> currentEngine(){
+        return defaultTransactionProvider().detachedEngine();
     }
 
 }

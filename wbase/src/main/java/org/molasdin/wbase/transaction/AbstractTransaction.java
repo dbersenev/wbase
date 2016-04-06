@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Bersenev Dmitry molasdin@outlook.com
+ * Copyright 2016 Bersenev Dmitry molasdin@outlook.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,79 +17,39 @@
 package org.molasdin.wbase.transaction;
 
 /**
- * Created by dbersenev on 15.10.2014.
+ * Created by dbersenev on 30.03.2016.
  */
-public abstract class AbstractTransaction<T extends Engine> implements Transaction<T> {
+public class AbstractTransaction implements Transaction {
+    private boolean wasRolledBack = false;
+    private boolean wasCommitted = false;
 
-    private T engine;
-    private Boolean nested;
-//    private EngineFactory<T> engineFactory;
-
-    public AbstractTransaction(T engine) {
-        this.engine = engine;
-    }
-
-//    public AbstractTransaction(EngineFactory<T> engineFactory) {
-//        this.engineFactory = engineFactory;
-//    }
-
-//    public void setEngineFactory(EngineFactory<T> engineFactory) {
-//        this.engineFactory = engineFactory;
-//    }
-//    public EngineFactory<T> engineFactory(){
-//        return engineFactory;
-//    }
-
-
-    @Override
     public void begin() {
 
     }
 
     @Override
-    public T engine() {
-        /*if(engine == null){
-            engine = engineFactory.create();
-        }*/
-        return engine;
-    }
-
-    protected void setNested(Boolean nested) {
-        this.nested = nested;
-    }
-    @Override
-    public Boolean isNested() {
-        return nested;
+    public void rollback() {
+        wasRolledBack = true;
     }
 
     @Override
-    public Transaction<T> nested() {
-        return null;
+    public void commit() {
+        setRolledBack(false);
     }
 
     @Override
-    public void commitAndClose() {
-        commit();
-        close();
+    public boolean wasRolledBack() {
+        return wasRolledBack;
+    }
+    public void setRolledBack(boolean flag){
+        wasRolledBack = flag;
     }
 
     @Override
-    public void close() {
-        engine().close();
+    public boolean wasCommitted() {
+        return wasCommitted;
     }
-
-    @Override
-    public <U> U invokeNested(final Transactional<T, U> transactional) {
-        final Transaction<T> nested = nested();
-        if(nested == null){
-            return null;
-        }
-        TransactionProvider<T> provider = new AbstractTransactionProvider<T>() {
-            @Override
-            public Transaction<T> newTransaction(TransactionDescriptor descriptor) {
-                return nested;
-            }
-        };
-        return new BasicTransactionRunner<T>(provider).invoke(transactional);
+    public void setCommitted(boolean wasCommitted) {
+        this.wasCommitted = wasCommitted;
     }
 }

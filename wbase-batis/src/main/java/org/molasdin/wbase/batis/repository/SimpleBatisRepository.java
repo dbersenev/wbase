@@ -19,12 +19,9 @@ package org.molasdin.wbase.batis.repository;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.molasdin.wbase.batis.BatisUtil;
 import org.molasdin.wbase.batis.CommonMapper;
-import org.molasdin.wbase.batis.annotations.MappedClass;
-import org.molasdin.wbase.batis.support.CommonBatisSupport;
-import org.molasdin.wbase.storage.*;
+import org.molasdin.wbase.batis.support.CommonBatisMapperSupport;
 
 import java.io.Serializable;
-import java.lang.annotation.Annotation;
 
 /**
  * Created by dbersenev on 04.02.14.
@@ -32,8 +29,6 @@ import java.lang.annotation.Annotation;
 public class SimpleBatisRepository<T,M extends CommonMapper<T>, K extends Serializable> extends BatisRepository<T,M, K> {
 
     public SimpleBatisRepository(SqlSessionFactory factory, Class<M> mapperClass) {
-        super(new CommonBatisSupport<M>(factory, mapperClass));
-        Class<T> clazz = BatisUtil.mappedClass(mapperClass);
-        setMapperId(clazz.getCanonicalName());
+        super(new CommonBatisMapperSupport(factory), mapperClass);
     }
 }

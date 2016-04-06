@@ -18,12 +18,11 @@ package org.molasdin.wbase.collections.list;
 
 import org.apache.commons.beanutils.BeanComparator;
 import org.apache.commons.beanutils.ConvertUtils;
-import org.apache.commons.beanutils.MethodUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.list.AbstractListDecorator;
 import org.molasdin.wbase.ReflectionHelper;
-import org.molasdin.wbase.storage.Cursor;
+import org.molasdin.wbase.storage.cursor.BiDirectionalBatchCursor;
 import org.molasdin.wbase.storage.Order;
 
 import java.util.Collections;
@@ -98,12 +97,12 @@ public class ExtendedListDecorator<T> extends AbstractListDecorator<T> implement
     }
 
     @Override
-    public Cursor<T> newCursor() {
+    public BiDirectionalBatchCursor<T> newCursor() {
         return null;
     }
 
     @Override
-    public Cursor<T> currentCursor() {
+    public BiDirectionalBatchCursor<T> currentCursor() {
         return null;
     }
 }

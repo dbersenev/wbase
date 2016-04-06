@@ -19,30 +19,22 @@ package org.molasdin.wbase;
 import org.molasdin.wbase.storage.BasicSupport;
 import org.molasdin.wbase.transaction.jdbc.JdbcEngine;
 import org.molasdin.wbase.transaction.Transaction;
-import org.molasdin.wbase.transaction.Transactional;
 
 import java.sql.Connection;
+import java.util.Optional;
 
 /**
  * Created by dbersenev on 16.10.2014.
  */
 public class SimpleJdbcDao extends BasicSupport<JdbcEngine> {
     public void method(){
-        run(new Transactional<JdbcEngine, Void>() {
-            @Override
-            public Void run(Transaction<JdbcEngine> context) throws Exception {
-                JdbcEngine engine = context.engine();
+        run(tx -> {
+                JdbcEngine engine = tx.engine();
                 Connection conn = engine.connection();
                 //Nested Transaction
-                context.invokeNested(new Transactional<JdbcEngine, Integer>() {
-                    @Override
-                    public Integer run(Transaction<JdbcEngine> context) throws Exception {
-                        return null;
-                    }
-                });
-                return null;
-            }
-        });
+                tx.invokeNested(txIn -> Optional.empty());
+                return Optional.empty();
+            });
     }
 
     public void method2(){

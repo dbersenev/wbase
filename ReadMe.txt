@@ -33,11 +33,11 @@
         </property>
 </bean>
 
-<bean id="cursorFactory" class="org.molasdin.wbase.hibernate.BasicOrmSearchResultFactory"/>
+<bean id="extBiDirectionalCursorFactory" class="org.molasdin.wbase.hibernate.BasicOrmSearchResultFactory"/>
 
 <bean id="commonDao" class="org.molasdin.wbase.hibernate.BasicOrmSupport">
         <property name="sessionFactory" ref="sessionFactory"/>
-        <property name="cursorFactory" ref="cursorFactory"/>
+        <property name="extBiDirectionalCursorFactory" ref="extBiDirectionalCursorFactory"/>
 </bean>
 
 <bean id="simpleRepo" class="org.molasdin.wbase.hibernate.BasicOrmRepository">

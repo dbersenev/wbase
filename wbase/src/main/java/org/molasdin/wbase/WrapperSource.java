@@ -21,13 +21,20 @@ package org.molasdin.wbase;
  */
 public class WrapperSource<T> implements Source<T> {
     private T value;
+    private Object key;
 
-    public WrapperSource(T value) {
+    public WrapperSource(T value, Object key) {
         this.value = value;
+        this.key = key;
     }
 
     @Override
     public T value() {
         return value;
+    }
+
+    @Override
+    public Object key() {
+        return key;
     }
 }

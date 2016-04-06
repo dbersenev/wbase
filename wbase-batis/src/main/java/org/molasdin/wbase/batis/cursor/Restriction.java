@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Bersenev Dmitry molasdin@outlook.com
+ * Copyright 2016 Bersenev Dmitry molasdin@outlook.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,29 +26,11 @@ import java.util.Map;
  * Created by dbersenev on 31.01.14.
  */
 public interface Restriction {
-    public int getStart();
+    Long getStart();
 
-    public void setStart(int start);
+    Long getSize();
 
-    public int getOffset();
+    List<Pair<String, Order>> getOrders();
 
-    public void setOffset(int offset);
-
-    public List<Pair<String, Order>> getOrders();
-
-    public void setOrders(List<Pair<String, Order>> orders);
-
-    public Map<String, String> getFilters();
-
-    public void setFilters(Map<String, String> filters);
-
-    public SimpleRestriction withRange(int start, int offset);
-
-    public SimpleRestriction withOrder(String property, Order propOrder);
-
-    public SimpleRestriction withOrder(Pair<String, Order> order);
-
-    public SimpleRestriction withOrders(List<Pair<String, Order>> orders);
-
-    public SimpleRestriction withFilters(Map<String, String> filters);
+    Map<String, String> getFilters();
 }

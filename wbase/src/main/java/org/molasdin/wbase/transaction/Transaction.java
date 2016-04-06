@@ -16,19 +16,33 @@
 
 package org.molasdin.wbase.transaction;
 
+import org.apache.commons.collections4.Closure;
+
 import java.io.Closeable;
+import java.util.Optional;
 
 /**
  * Created by dbersenev on 15.10.2014.
  */
-public interface Transaction<T extends Engine>{
-    void begin();
-    void rollback();
-    void commit();
-    void commitAndClose();
-    void close();
-    Boolean isNested();
-    T engine();
-    Transaction<T> nested();
-    <U> U invokeNested(Transactional<T, U> transactional);
+public interface Transaction extends AutoCloseable {
+
+    default void rollback() {
+
+    }
+
+    default void commit() {
+
+    }
+
+    default void close() {
+
+    }
+
+    default boolean wasRolledBack(){
+        return false;
+    }
+
+    default boolean wasCommitted(){
+        return false;
+    }
 }

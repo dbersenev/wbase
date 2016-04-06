@@ -23,22 +23,8 @@ import java.util.Map;
 
 
 public interface Repository<T, K extends Serializable>{
-
-    Cursor<T> all();
-
     T byId(K id);
-
-    /**
-     * All records ordered by some criteria
-     * @param orderProp
-     * @param order
-     * @return
-     */
-    List<T> allAtOnce(String orderProp, Order order);
-
     void save(T o);
-    void saveOrUpdate(T o);
-    void merge(T o);
     void update(T o);
     void remove(T o);
 }

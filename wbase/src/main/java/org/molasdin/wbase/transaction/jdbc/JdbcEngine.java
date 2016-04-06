@@ -17,20 +17,18 @@
 package org.molasdin.wbase.transaction.jdbc;
 
 import org.apache.commons.dbutils.ProxyFactory;
-import org.molasdin.wbase.transaction.Engine;
+import org.molasdin.wbase.transaction.manager.Engine;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.sql.Connection;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Created by dbersenev on 15.10.2014.
  */
-public class JdbcEngine implements InvocationHandler, Engine{
+public class JdbcEngine implements InvocationHandler, Engine, AutoCloseable{
     private Connection connection;
     private Connection proxy;
     private List<Statement> statements = new LinkedList<Statement>();
@@ -48,6 +46,43 @@ public class JdbcEngine implements InvocationHandler, Engine{
         return connection;
     }
 
+    public ResultSet preparedQueryResult(String query, Object ...args) {
+        try {
+            PreparedStatement stmt = connection().prepareStatement(query);
+            int pos = 1;
+            for(Object entry: args) {
+                stmt.setObject(pos, entry);
+            }
+            return stmt.executeQuery();
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public ExtendedStatement extended(String query) {
+        return new ExtendedStatement(prepared(query));
+    }
+
+    public ExtendedStatement extended(String query, ResultSetType type, ResultSetConcurrency conc, ResultSetHoldability hold) {
+        return new ExtendedStatement(prepared(query, type, conc, hold));
+    }
+
+    public PreparedStatement prepared(String query, ResultSetType type, ResultSetConcurrency conc, ResultSetHoldability hold) {
+        try {
+            return connection().prepareStatement(query, type.value(), conc.value(), hold.value());
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public PreparedStatement prepared(String query) {
+        try {
+            return connection().prepareStatement(query);
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
     private void closeDependencies() throws Exception{
         for(Statement entry: statements){
             if(entry.isClosed()){
@@ -57,7 +92,6 @@ public class JdbcEngine implements InvocationHandler, Engine{
         statements.clear();
     }
 
-    @Override
     public void close() {
         if(statements.isEmpty()){
             return;

@@ -19,10 +19,22 @@ package org.molasdin.wbase.storage;
 import java.util.Map;
 
 
-public interface SearchConfiguration<T,U> {
+public interface SearchConfiguration<U> {
     U query();
     String baseProperty();
     String propertiesPrefix();
     String distinctProperty();
     Map<String, FilteringMode> filterModes();
+
+    default String translateProperty(String original) {
+        if(propertiesPrefix() != null){
+            original = propertiesPrefix().concat(".").concat(original);
+        }
+
+        if(baseProperty() == null){
+            return original;
+        }
+
+        return original.replace(baseProperty().concat("."), "");
+    }
 }

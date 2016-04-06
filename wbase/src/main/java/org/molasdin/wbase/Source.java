@@ -21,4 +21,5 @@ package org.molasdin.wbase;
  */
 public interface Source<T> {
     T value();
+    Object key();
 }

@@ -16,94 +16,32 @@
 
 package org.molasdin.wbase.hibernate.cursor;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.hibernate.Session;
 
-
-import org.hibernate.criterion.*;
+import org.hibernate.criterion.DetachedCriteria;
 import org.molasdin.wbase.hibernate.HibernateEngine;
-import org.molasdin.wbase.hibernate.criterion.FilterCriterion;
-import org.molasdin.wbase.storage.*;
-import org.molasdin.wbase.transaction.TransactionRunner;
+import org.molasdin.wbase.storage.cursor.DelegatingBiDirectionalBatchCursor;
+import org.molasdin.wbase.transaction.manager.TransactionManager;
 
 import java.util.List;
-import java.util.Map;
 
 
-public class BasicHibernateCursor<T> extends CommonHibernateCursor<T, DetachedCriteria> {
+public class BasicHibernateCursor<T> extends DelegatingBiDirectionalBatchCursor<T, HibernateEngine> {
 
-    public BasicHibernateCursor() {
+    private DetachedCriteria criteria;
+
+    public BasicHibernateCursor(TransactionManager<HibernateEngine> pm,
+                                DetachedCriteria criteria, long count) {
+        super(pm);
+        this.criteria = criteria;
+        setSize(count);
     }
 
-    public BasicHibernateCursor(TransactionRunner<HibernateEngine> runner) {
-        super(runner);
-    }
-
-    public static MatchMode toMatchMode(FilteringMode mode){
-        switch (mode){
-            case START:
-                return MatchMode.START;
-            case END:
-                return MatchMode.END;
-            case MIDDLE:
-                return MatchMode.ANYWHERE;
-            default:
-                return MatchMode.EXACT;
-        }
-    }
-
-    @Override
     @SuppressWarnings("unchecked")
-    public List<T> dataCallback(Session session) {
-        DetachedCriteria criteria = searchSpecification().query();
-        List<Pair<String, org.molasdin.wbase.storage.Order>> orders = orders();
-        if(!orders.isEmpty()){
-            for(Pair<String, org.molasdin.wbase.storage.Order> order: orders){
-                String prop = translateProperty(order.getLeft());
-                criteria.addOrder(org.molasdin.wbase.storage.Order.ASC.equals(order.getRight()) ? org.hibernate.criterion.Order.asc(prop) :
-                        org.hibernate.criterion.Order.desc(prop));
-            }
-        }
-
-        criteria.add(populateFilters(searchSpecification().filterModes()));
-        return postProcessData((List<T>)criteria.getExecutableCriteria(session)
-                .setFirstResult(calculatedRowOffset())
-                .setMaxResults(pageSize())
-                .list());
-    }
-
     @Override
-    public Long totalCallback(Session session) {
-        DetachedCriteria criteria = searchSpecification().query();
-        if(searchSpecification().distinctProperty() != null){
-            criteria.setProjection(Projections.countDistinct(searchSpecification().distinctProperty()));
-        }else{
-            criteria.setProjection(Projections.rowCount());
-        }
-        criteria.add(populateFilters(searchSpecification().filterModes()));
-        return (Long)criteria.getExecutableCriteria(session).uniqueResult();
-    }
-
-    private Conjunction populateFilters(Map<String, FilteringMode> matchModes){
-        Conjunction filterCriterion = Restrictions.conjunction();
-        if(filters().size() > 0){
-            for(String prop: filters().keySet()){
-                String translated = translateProperty(prop);
-
-                MatchMode mode = matchModes.containsKey(prop)?toMatchMode(matchModes.get(prop)):MatchMode.START;
-                filterCriterion.add(new FilterCriterion(translated, filters().get(prop).getRight(), mode));
-//                filterCriterion.add(Restrictions.ilike(translated, filters().get(prop).getRight(), MatchMode.START));
-            }
-        }
-        return filterCriterion;
-    }
-
-
-    @Override
-    public Cursor<T> copy() {
-        BasicHibernateCursor<T> newSearchResult = new BasicHibernateCursor<T>();
-        newSearchResult.setSearchConfiguration(searchSpecification());
-        newSearchResult.setRunner(runner());
-        return newSearchResult;
+    protected List<T> loadTx(HibernateEngine ctx) {
+        return (List<T>)criteria.getExecutableCriteria(ctx.session())
+                .setFirstResult((int)(currentOffset()))
+                .setMaxResults((int)pageSize())
+                .list();
     }
 }

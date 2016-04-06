@@ -21,10 +21,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.molasdin.wbase.batis.BatisUtil;
 import org.molasdin.wbase.batis.CommonMapper;
 import org.molasdin.wbase.batis.repository.BatisRepository;
-import org.molasdin.wbase.batis.spring.support.SpringBatisSupport;
-import org.molasdin.wbase.batis.support.BatisSupport;
+import org.molasdin.wbase.batis.spring.support.SpringBatisMapperSupport;
+import org.molasdin.wbase.batis.support.BatisMapperSupport;
 import org.molasdin.wbase.storage.Repository;
-import org.molasdin.wbase.storage.Storable;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -63,11 +62,11 @@ public class BatisRepositoryFactoryBean<T, M extends CommonMapper<T>, F extends 
     @SuppressWarnings("unchecked")
     @Override
     public F getObject() throws Exception {
-        SpringBatisSupport<M> support = new SpringBatisSupport<M>(mapperClass);
+        SpringBatisMapperSupport support = new SpringBatisMapperSupport();
         support.setTemplate(template);
         support.setTransactionManager(txManager);
         BatisRepository<T,M,?> repo = ConstructorUtils.invokeExactConstructor(repositoryClass, new Object[]{support},
-                new Class[]{BatisSupport.class});
+                new Class[]{BatisMapperSupport.class});
         Class<T> mappedClass = BatisUtil.mappedClass(mapperClass);
         if(StringUtils.isBlank(mapperId)){
             repo.setMapperId(mappedClass.getCanonicalName());

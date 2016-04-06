@@ -17,13 +17,13 @@
 package org.molasdin.wbase.collections;
 
 import org.molasdin.wbase.storage.Order;
-import org.molasdin.wbase.storage.Cursor;
+import org.molasdin.wbase.storage.cursor.BiDirectionalBatchCursor;
 
 /**
  * Created by dbersenev on 16.04.2014.
  */
 public interface ExtendedSequence<T> {
     void sort(Order order);
-    Cursor<T> newCursor();
-    Cursor<T> currentCursor();
+    BiDirectionalBatchCursor<T> newCursor();
+    BiDirectionalBatchCursor<T> currentCursor();
 }

@@ -18,7 +18,7 @@ package org.molasdin.wbase.hibernate.search;
 
 import org.apache.commons.lang3.text.StrBuilder;
 import org.hibernate.criterion.MatchMode;
-import org.molasdin.wbase.hibernate.util.RestrictionsHelper;
+import org.molasdin.wbase.hibernate.util.HibernateUtils;
 
 /**
  * Created by dbersenev on 24.02.14.
@@ -65,7 +65,7 @@ public class BasicQueryBuilder implements QueryBuilder {
 
     @Override
     public QueryBuilder ilikeWild(String prop, String value, MatchMode mode) {
-        addPart(RestrictionsHelper.ilikeWildHql(prop, value, mode));
+        addPart(HibernateUtils.ilikeWildHql(prop, value, mode));
         hasCondition = true;
         return this;
     }

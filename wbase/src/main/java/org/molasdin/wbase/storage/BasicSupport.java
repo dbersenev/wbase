@@ -16,85 +16,39 @@
 
 package org.molasdin.wbase.storage;
 
-import org.molasdin.wbase.transaction.*;
+import org.molasdin.wbase.transaction.manager.Engine;
+import org.molasdin.wbase.transaction.manager.TransactionManager;
 
 /**
  * Created by dbersenev on 15.10.2014.
  */
 public class BasicSupport<T extends Engine> implements Support<T> {
-    private TransactionProvider<T> provider;
+    private TransactionManager<T> provider;
 
-    @Override
-    public void setTransactionProvider(TransactionProvider<T> provider) {
+    public void setDefaultTransactionProvider(TransactionManager<T> provider) {
         this.provider = provider;
     }
 
-    @Override
-    public TransactionProvider<T> transactionProvider() {
+    public TransactionManager<T> defaultTransactionProvider() {
         if(provider != null){
             return provider;
         }
+
         synchronized (this){
-            if(provider != null){
+            if(provider != null) {
                 return provider;
             }
-            setTransactionProvider(newDefaultProvider());
+            TransactionManager<T> newOne = newDefaultProvider();
+            if(newOne != null){
+                provider = newOne;
+            }
         }
         return provider;
     }
 
-    @Override
-    public <U> U runWithIsolation(Transactional<T, U> transactional, TransactionIsolation isolation) {
-        return newRunnerWithIsolation(isolation).invoke(transactional);
-    }
-
-    public <U> U run(Transactional<T, U> transactional, TransactionDescriptor descriptor){
-        return newRunner(descriptor).invoke(transactional);
-    }
-
-    @Override
-    public Transaction<T> newTransaction() {
-        return newTransaction(null);
-    }
-
-    @Override
-    public Transaction<T> newTransactionWithIsolation(TransactionIsolation isolation) {
-       return newTransaction(TransactionDescriptors.INSTANCE.isolated(isolation));
-    }
-
-    public Transaction<T> newTransaction(TransactionDescriptor descriptor){
-        TransactionProvider<T> provider = transactionProvider();
-        if (descriptor != null) {
-            return provider.newTransaction(descriptor);
-        }
-        return provider.newTransaction();
-    }
-
-    @Override
-    public TransactionRunner<T> newRunner() {
-        return newRunner(null);
-    }
-
-    public TransactionRunner<T> newRunner(TransactionDescriptor descriptor){
-        TransactionProvider<T> provider = transactionProvider();
-        TransactionRunner<T> runner = new BasicTransactionRunner<T>(provider);
-        if (descriptor != null) {
-            runner.setDescriptor(descriptor);
-        }
-        return runner;
-    }
-
-    @Override
-    public TransactionRunner<T> newRunnerWithIsolation(TransactionIsolation isolation) {
-        return newRunner(TransactionDescriptors.INSTANCE.isolated(isolation));
-    }
-
-    public TransactionProvider<T> newDefaultProvider(){
+    protected TransactionManager<T> newDefaultProvider(){
         return null;
     }
 
-    @Override
-    public <U> U run(Transactional<T, U> transactional) {
-        return newRunner().invoke(transactional);
-    }
+
 }

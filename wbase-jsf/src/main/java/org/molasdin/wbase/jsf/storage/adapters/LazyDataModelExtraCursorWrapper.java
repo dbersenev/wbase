@@ -17,16 +17,16 @@
 package org.molasdin.wbase.jsf.storage.adapters;
 
 import org.molasdin.wbase.storage.Storable;
-import org.molasdin.wbase.storage.Cursor;
 import org.molasdin.wbase.jsf.storage.adapters.extra.BasicExtraData;
 import org.molasdin.wbase.jsf.storage.adapters.extra.ExtraData;
+import org.molasdin.wbase.storage.cursor.ExtBiDirectionalCursorFactory;
 import org.primefaces.model.SortMeta;
 
 import java.util.*;
 
 
 /**
- * Primefaces Cursor wrapper with in-table edit support
+ * Primefaces BiDirectionalBatchCursor wrapper with in-table edit support
  *
  * @param <T>
  */
@@ -35,13 +35,14 @@ public class LazyDataModelExtraCursorWrapper<T extends Storable<T>> extends Abst
     private List<T> snapshot = new ArrayList<T>();
     private long count;
     private ExtraData<T> extraData = new BasicExtraData<T>();
+    private boolean loaded = false;
 
-    public LazyDataModelExtraCursorWrapper(Cursor<T> result) {
-        super(result);
+    public LazyDataModelExtraCursorWrapper(ExtBiDirectionalCursorFactory<T> extBiDirectionalCursorFactory) {
+        super(extBiDirectionalCursorFactory);
     }
 
-    public LazyDataModelExtraCursorWrapper(Cursor<T> result, ExtraData<T> extraData) {
-        this(result);
+    public LazyDataModelExtraCursorWrapper(ExtBiDirectionalCursorFactory<T> extBiDirectionalCursorFactory, ExtraData<T> extraData) {
+        this(extBiDirectionalCursorFactory);
         setExtraData(extraData);
     }
 
@@ -61,7 +62,7 @@ public class LazyDataModelExtraCursorWrapper<T extends Storable<T>> extends Abst
         processRowParameters(row, pageSize);
 
         //if nothing has been changed - return cached collection
-        if (isCountRetrieved() && !snapshot.isEmpty() &&
+        if (isUseCache() && !snapshot.isEmpty() &&
                 (extraData.recordsRemoved().isEmpty())) {
             //extra data manipulation cab be done without trip to db
             List<T> newRecords = extraData.newRecords();
@@ -106,9 +107,10 @@ public class LazyDataModelExtraCursorWrapper<T extends Storable<T>> extends Abst
         }
 
         if (pageSize > 0) {
-            setCountRetrieved(false);
+            setUseCache(false);
             result().setPageSize(pageSize);
             result().setCurrentOffset(row);
+            result().load();
             snapshot.addAll(result().data());
         }
 
@@ -117,10 +119,10 @@ public class LazyDataModelExtraCursorWrapper<T extends Storable<T>> extends Abst
 
     @Override
     public int getRowCount() {
-        if (!isCountRetrieved()) {
+        if (!isUseCache()) {
             count = result().totalRecords();
             count += extraData.data().size();
-            setCountRetrieved(true);
+            setUseCache(true);
         }
         return (int) count;
     }
@@ -129,7 +131,7 @@ public class LazyDataModelExtraCursorWrapper<T extends Storable<T>> extends Abst
     public void setRowCount(int rowCount) {
         super.setRowCount(rowCount);
         count = rowCount;
-        setCountRetrieved(true);
+        setUseCache(true);
     }
 
     public void invalidateCache() {

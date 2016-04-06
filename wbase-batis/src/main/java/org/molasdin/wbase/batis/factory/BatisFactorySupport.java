@@ -27,7 +27,7 @@ import org.molasdin.wbase.registry.RegistryManager;
 /**
  * Simplifies creation of Repositories and DAOs.
  * By default it uses registry to retrieve SqlSessionFactory.
- * Use SqlSessionFactoryListener or BatisUtil to configure SqlSessionFactory.
+ * Use SqlSessionFactoryListener or BatisUtil to configureTransaction SqlSessionFactory.
  * @param <T>
  */
 public abstract class BatisFactorySupport<T> {

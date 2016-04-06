@@ -40,4 +40,9 @@ public class DataSourceConnectionSource implements Source<Connection> {
             throw new RuntimeException(ex);
         }
     }
+
+    @Override
+    public Object key() {
+        return dataSource;
+    }
 }

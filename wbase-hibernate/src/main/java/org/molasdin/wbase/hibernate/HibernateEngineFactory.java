@@ -18,8 +18,7 @@ package org.molasdin.wbase.hibernate;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.molasdin.wbase.hibernate.HibernateEngine;
-import org.molasdin.wbase.transaction.EngineFactory;
+import org.molasdin.wbase.transaction.manager.EngineFactory;
 
 /**
  * Created by molasdin on 10/30/14.

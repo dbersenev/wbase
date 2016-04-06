@@ -27,6 +27,4 @@ public interface HibernateSupport extends Support<HibernateEngine>{
 
     Session newSession();
     Session currentSession();
-
-    HibernateCursorFactory cursorFactory();
 }

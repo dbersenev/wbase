@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public abstract class AbstractSearchConfiguration<T,U> implements SearchConfiguration<T,U> {
+public abstract class AbstractSearchConfiguration<T> implements SearchConfiguration<T> {
 
     private Map<String, FilteringMode> matchModes = new HashMap<String, FilteringMode>();
 

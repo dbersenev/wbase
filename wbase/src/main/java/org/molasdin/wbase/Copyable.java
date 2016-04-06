@@ -16,10 +16,12 @@
 
 package org.molasdin.wbase;
 
+import org.molasdin.wbase.util.Exceptions;
+
 /**
  * Marks class as copyable
  * @param <T>
  */
-public interface Copyable<T> {
+public interface Copyable<T>{
     T copy();
 }

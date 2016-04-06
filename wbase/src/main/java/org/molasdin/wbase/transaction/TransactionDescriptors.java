@@ -22,7 +22,13 @@ package org.molasdin.wbase.transaction;
 public enum TransactionDescriptors {
     INSTANCE;
 
+    private TransactionDescriptor simple = new BasicTransactionDescriptor();
+
     public TransactionDescriptor isolated(TransactionIsolation isolation){
         return new BasicTransactionDescriptor(isolation);
+    }
+
+    public TransactionDescriptor simple(){
+        return simple;
     }
 }
