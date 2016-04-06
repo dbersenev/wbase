@@ -27,11 +27,11 @@ import java.sql.Savepoint;
 /**
  * Created by dbersenev on 21.10.2014.
  */
-public class BatisUserTransaction extends AbstractTransaction{
+public class BatisTransaction extends AbstractTransaction{
     private SqlSession session;
     private Savepoint savepoint;
 
-    public BatisUserTransaction(SqlSession session) {
+    public BatisTransaction(SqlSession session) {
         this.session = session;
     }
 

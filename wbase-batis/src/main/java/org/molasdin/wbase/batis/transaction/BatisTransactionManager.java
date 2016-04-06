@@ -74,7 +74,7 @@ public class BatisTransactionManager extends AbstractTransactionManager<BatisMap
             hasSavePoint = false;
         }
 
-        BatisUserTransaction tx = new BatisUserTransaction(session);
+        BatisTransaction tx = new BatisTransaction(session);
 
         if(hasSavePoint){
             try {
