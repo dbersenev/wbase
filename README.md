@@ -18,7 +18,7 @@ WBase is the Java library of resusable components and integration with JSF/Sprin
 
 ##Development Highlights
 
-1. Project currently in not usable state
+1. Project currently in not in usable state
 2. Cursors framework introduces interesting concepts including:
    a. Cursors can be used with both "result sets" and "db pagination".
    b. Cursors are separated to "Cursor" and "Factory" which provides more convenient approach
