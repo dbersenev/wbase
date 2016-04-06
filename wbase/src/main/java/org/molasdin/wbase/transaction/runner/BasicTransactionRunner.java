@@ -18,6 +18,7 @@ package org.molasdin.wbase.transaction.runner;
 
 import org.molasdin.wbase.transaction.UserTransaction;
 import org.molasdin.wbase.transaction.*;
+import org.molasdin.wbase.transaction.exceptions.TransactionInterruptedException;
 import org.molasdin.wbase.transaction.manager.Engine;
 import org.molasdin.wbase.transaction.manager.TransactionManager;
 

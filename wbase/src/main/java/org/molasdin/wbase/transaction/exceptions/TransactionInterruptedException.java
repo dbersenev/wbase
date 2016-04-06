@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Bersenev Dmitry molasdin@outlook.com
+ * Copyright 2016 Bersenev Dmitry molasdin@outlook.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.transaction;
+package org.molasdin.wbase.transaction.exceptions;
 
 /**
  * Created by dbersenev on 15.10.2014.
