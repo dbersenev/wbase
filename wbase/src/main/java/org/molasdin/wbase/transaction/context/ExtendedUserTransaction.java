@@ -27,18 +27,12 @@ import org.molasdin.wbase.transaction.manager.Engine;
 public class ExtendedUserTransaction<T extends Engine> extends ExtendedTransaction implements UserTransaction<T> {
 
     private T engine;
-    private UserTransactionContext ctx;
+
     private UserTransaction<T> rollbackOnlyProxy = null;
 
     public ExtendedUserTransaction(Transaction tx, T engine, UserTransactionContext ctx) {
-        super(tx);
+        super(tx, ctx);
         this.engine = engine;
-        this.ctx = ctx;
-    }
-
-    @Override
-    public UserTransactionContext context() {
-        return ctx;
     }
 
     public UserTransaction<T> rollbackOnlyProxy(){
@@ -46,7 +40,7 @@ public class ExtendedUserTransaction<T extends Engine> extends ExtendedTransacti
             rollbackOnlyProxy =  new AbstractUserTransaction<T>(engine) {
                 @Override
                 public UserTransactionContext context() {
-                    return ctx;
+                    return ExtendedUserTransaction.this.context();
                 }
 
                 @Override

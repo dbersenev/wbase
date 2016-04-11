@@ -25,7 +25,7 @@ public interface Interception {
     void addPreCommit(Interceptor<TerminatableTransactionEvent> consumer);
     void addPostCommit(Interceptor<TransactionEvent> consumer);
 
-    void addPreRollbackListener(Interceptor<TerminatableTransactionEvent> consumer);
+    void addPreRollback(Interceptor<TerminatableTransactionEvent> consumer);
     void addPostRollback(Interceptor<TransactionEvent> consumer);
 
     void addPreClose(Interceptor<TransactionEvent> consumer);

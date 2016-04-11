@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.transaction.context;
+package org.molasdin.wbase.transaction.context.config;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.molasdin.wbase.transaction.*;
@@ -31,10 +31,9 @@ import java.util.function.Consumer;
 /**
  * Created by dbersenev on 29.03.2016.
  */
-class BasicUserTransactionConfiguration<T extends Engine> implements UserTransactionConfiguration<T>, ExtendedUserConfiguration<T>{
+public class BasicUserTransactionConfiguration<T extends Engine> implements UserTransactionConfiguration<T>, ExtendedUserConfiguration<T>{
 
     private Map<Object, Object> localResources = new HashMap<>();
-    private Map<Object, Object> localResourcesLocked = Collections.unmodifiableMap(localResources);
     private Set<Object> newResources = new HashSet<>();
     private TransactionDescriptor descriptor;
     private boolean hasTx;
@@ -70,8 +69,8 @@ class BasicUserTransactionConfiguration<T extends Engine> implements UserTransac
     }
 
     @Override
-    public boolean hasInterceptors() {
-        return interceptions.containsKey(currentInterceptionMode);
+    public Map<InterceptionMode, ExtendedInterception> interceptions() {
+        return interceptions;
     }
 
     @Override
@@ -91,10 +90,6 @@ class BasicUserTransactionConfiguration<T extends Engine> implements UserTransac
             localResources.put(key, resource);
             newResources.add(key);
         }
-    }
-
-    protected Map<Object, Object> localResources(){
-        return localResources;
     }
 
     @Override
@@ -128,7 +123,7 @@ class BasicUserTransactionConfiguration<T extends Engine> implements UserTransac
 
     @Override
     public Map<Object, Object> resources() {
-        return localResourcesLocked;
+        return localResources;
     }
 
 

@@ -32,15 +32,15 @@ public class ExtendedTransaction extends DelegatingTransaction {
 
     private ExtendedInterception interception = new ExtendedInterception();
 
-    private Map<Object, Object> resourcesArchive = new HashMap<>();
-    private Set<Object> resourcesToRemove = new HashSet<>();
-
-
+    private UserTransactionContext ctx;
     private BasicTerminatableTransactionEvent terminatableEvent = null;
     private TransactionEvent commonEvent = null;
 
-    public ExtendedTransaction(Transaction tx) {
+    private Transaction rollbackOnlyProxy = null;
+
+    public ExtendedTransaction(Transaction tx, UserTransactionContext ctx) {
         super(tx);
+        this.ctx = ctx;
     }
 
     public ExtendedInterception interception(){
@@ -64,6 +64,11 @@ public class ExtendedTransaction extends DelegatingTransaction {
     }
 
     @Override
+    public UserTransactionContext context() {
+        return ctx;
+    }
+
+    @Override
     public void rollback() {
         if (wasRolledBack()) {
             throw new TransactionRolledBackException();
@@ -82,16 +87,30 @@ public class ExtendedTransaction extends DelegatingTransaction {
         }
         interception.emitPreClose(commonEvent());
         super.close();
-        resourcesArchive = null;
         interception.emitPostClose(commonEvent());
     }
 
-    public Map<Object, Object> resourcesArchive() {
-        return resourcesArchive;
-    }
+    public Transaction rollbackOnlyProxy(){
+        if(rollbackOnlyProxy == null) {
+            rollbackOnlyProxy = new Transaction() {
+                @Override
+                public UserTransactionContext context() {
+                    return ctx;
+                }
 
-    public Set<Object> resourcesToRemove() {
-        return resourcesToRemove;
+                @Override
+                public void rollback() {
+                    ExtendedTransaction.this.rollback();
+                }
+
+                @Override
+                public boolean wasRolledBack() {
+                    return ExtendedTransaction.this.wasRolledBack();
+                }
+            };
+        }
+
+        return rollbackOnlyProxy;
     }
 
     private TransactionEvent commonEvent(){

@@ -16,15 +16,16 @@
 
 package org.molasdin.wbase.transaction;
 
-import org.apache.commons.collections4.Closure;
-
-import java.io.Closeable;
-import java.util.Optional;
+import org.molasdin.wbase.transaction.context.UserTransactionContext;
 
 /**
  * Created by dbersenev on 15.10.2014.
  */
 public interface Transaction extends AutoCloseable {
+
+    default UserTransactionContext context() {
+        return null;
+    }
 
     default void rollback() {
 

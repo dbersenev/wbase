@@ -18,6 +18,7 @@ package org.molasdin.wbase.transaction.context.config;
 
 import org.molasdin.wbase.transaction.context.interceptors.ExtendedInterception;
 import org.molasdin.wbase.transaction.context.interceptors.Interception;
+import org.molasdin.wbase.transaction.context.interceptors.InterceptionMode;
 
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +32,8 @@ public interface ExtendedConfiguration extends TransactionConfiguration{
     Set<Object> freshResources();
     boolean changed();
     Object underline();
+
     @Override
     ExtendedInterception interception();
-    boolean hasInterceptors();
+    Map<InterceptionMode, ExtendedInterception> interceptions();
 }

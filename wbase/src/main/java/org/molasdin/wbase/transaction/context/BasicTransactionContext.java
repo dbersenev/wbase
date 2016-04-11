@@ -19,6 +19,9 @@ package org.molasdin.wbase.transaction.context;
 import org.apache.commons.lang3.tuple.Pair;
 import org.molasdin.wbase.transaction.*;
 import org.molasdin.wbase.transaction.context.config.*;
+import org.molasdin.wbase.transaction.context.interceptors.ExtendedInterception;
+import org.molasdin.wbase.transaction.context.interceptors.Interception;
+import org.molasdin.wbase.transaction.context.interceptors.InterceptionMode;
 import org.molasdin.wbase.transaction.manager.Engine;
 
 import java.util.*;
@@ -35,6 +38,8 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
     private Deque<Pair<TransactionDescriptor, Integer>> descriptors = new ArrayDeque<>();
 
     private ExtendedTransaction currentTransaction = null;
+
+    private Set<ExtendedInterception> interceptions = new HashSet<>();
 
     private TransactionDescriptor newMergedDescriptor(TransactionDescriptor descr) {
         if (descriptors.isEmpty()) {
@@ -60,12 +65,17 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
     }
 
     @Override
+    public TransactionConfiguration newTransactionConfiguration(Object key, TransactionDescriptor desc, Object... resourceKeys) {
+        return null;
+    }
+
+    @Override
     public <U extends Engine> UserTransactionConfiguration<U> newUserTransactionConfiguration(Object key, TransactionDescriptor desc, Object ...resourcesKeys) {
         TransactionDescriptor newDesc = newMergedDescriptor(desc);
         BasicUserTransactionConfiguration<U> cfg = new BasicUserTransactionConfiguration<>(key, newDesc, resources.containsKey(key), this);
         for(Object entry: resourcesKeys){
             if(resources.containsKey(entry)){
-                cfg.localResources().put(entry, resources.get(key));
+                cfg.resources().put(entry, resources.get(key));
             }
         }
         return cfg;
@@ -73,8 +83,13 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
 
     @Override
     public Transaction configureTransaction(ExtendedConfiguration cfg) {
+        if(cfg.hasTransaction() && !cfg.changed()){
+            return ExtendedTransaction.class.cast(resources.get(cfg.key())).rollbackOnlyProxy();
+        }
 
-        return null;
+        ExtendedTransaction tx = new ExtendedTransaction((Transaction) cfg.underline(), this);
+        prepareTransaction(tx, cfg);
+        return tx;
     }
 
     @Override
@@ -85,32 +100,61 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
         }
 
         ExtendedUserTransaction<T> tx = new ExtendedUserTransaction<>(cfg.underline().getLeft(), cfg.underline().getRight(), this);
+        prepareTransaction(tx, cfg);
+        return tx;
+    }
+
+    private void prepareTransaction(ExtendedTransaction tx, ExtendedConfiguration cfg){
+        if(!cfg.interceptions().isEmpty()) {
+            Set<ExtendedInterception> interceptionsToRemove = new HashSet<>();
+            for(InterceptionMode mode: cfg.interceptions().keySet()) {
+                ExtendedInterception tmp = cfg.interceptions().get(mode);
+                if(mode.equals(InterceptionMode.CURRENT) || mode.equals(InterceptionMode.ALL)) {
+                    tx.interception().addFrom(tmp);
+                }
+
+                if(mode.equals(InterceptionMode.DESCENDANTS) || mode.equals(InterceptionMode.ALL)) {
+                    interceptions.add(tmp);
+                    interceptionsToRemove.add(tmp);
+                }
+            }
+            if(!interceptionsToRemove.isEmpty()) {
+                tx.interception().addPostClose((e) -> interceptions.removeAll(interceptionsToRemove));
+            }
+
+            for(ExtendedInterception entry: interceptions){
+                tx.interception().addFrom(entry);
+            }
+        }
 
         if(cfg.descriptor().requirement().equals(Requirement.ALWAYS_NEW_LINKED) && currentTransaction != null) {
             tx.interception().addPostRollback((t) -> currentTransaction.rollback());
         }
 
+        Map<Object, Object> resourcesArchive = new HashMap<>();
+        Set<Object> resourcesToRemove = new HashSet<>();
+
         for(Object entry: cfg.freshResources()) {
             if(resources.containsKey(entry)){
-                tx.resourcesArchive().put(entry, resources.get(entry));
+                resourcesArchive.put(entry, resources.get(entry));
             } else {
-                tx.resourcesToRemove().add(entry);
+                resourcesToRemove.add(entry);
             }
             resources.put(entry, cfg.resource(entry));
         }
 
         if(cfg.hasTransaction()){
-            tx.resourcesArchive().put(cfg.key(), tx);
+            resourcesArchive.put(cfg.key(), tx);
         }
 
         resources.put(cfg.key(), tx);
 
-        if(!tx.resourcesArchive().isEmpty()) {
-            tx.interception().addPreClose((t) -> resources.putAll(t.currentTransaction().resourcesArchive()));
+        if(!resourcesArchive.isEmpty()) {
+            tx.interception().addPreClose((t) -> resources.putAll(resourcesArchive));
         }
 
-        if(!tx.resourcesToRemove().isEmpty()) {
-            tx.interception().addPreClose((t) -> resources.keySet().removeAll(t.currentTransaction().resourcesToRemove()));
+        if(!resourcesToRemove.isEmpty()) {
+            tx.interception().addPreClose((t) -> resources.keySet().removeAll(resourcesToRemove));
         }
 
         if(isFresh){
@@ -122,6 +166,5 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
 
         tx.begin();
 
-        return tx;
     }
 }

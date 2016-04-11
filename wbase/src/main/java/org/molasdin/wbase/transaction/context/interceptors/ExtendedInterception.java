@@ -56,7 +56,7 @@ public class ExtendedInterception implements Interception{
         invokeCommonListeners(event,  postCommitListeners);
     }
 
-    public void addPreRollbackListener(Interceptor<TerminatableTransactionEvent> consumer) {
+    public void addPreRollback(Interceptor<TerminatableTransactionEvent> consumer) {
         preRollbackListeners.add(consumer);
     }
     public void emitPreRollback(TerminatableTransactionEvent event){
@@ -82,6 +82,16 @@ public class ExtendedInterception implements Interception{
     }
     public void emitPostClose(TransactionEvent event){
         invokeCommonListeners(event, postCloseListeners);
+    }
+
+    public void addFrom(ExtendedInterception interception) {
+        startListeners.addAll(interception.startListeners);
+        preCommitListeners.addAll(interception.preCommitListeners);
+        postCommitListeners.addAll(interception.postCloseListeners);
+        preRollbackListeners.addAll(interception.preRollbackListeners);
+        postRollbackListeners.addAll(interception.postRollbackListeners);
+        preCloseListeners.addAll(interception.preCloseListeners);
+        postCloseListeners.addAll(interception.postCloseListeners);
     }
 
     private void invokeCommonListeners(TransactionEvent event, List<Interceptor<TransactionEvent>> interceptors) {

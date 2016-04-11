@@ -16,6 +16,7 @@
 
 package org.molasdin.wbase.transaction.context;
 
+import org.molasdin.wbase.transaction.context.config.TransactionConfiguration;
 import org.molasdin.wbase.transaction.context.config.UserTransactionConfiguration;
 import org.molasdin.wbase.transaction.manager.Engine;
 import org.molasdin.wbase.transaction.TransactionDescriptor;
@@ -24,5 +25,6 @@ import org.molasdin.wbase.transaction.TransactionDescriptor;
  * Created by molasdin on 1/30/16.
  */
 public interface TransactionContext extends UserTransactionContext {
+    TransactionConfiguration newTransactionConfiguration(Object key, TransactionDescriptor desc, Object ...resourceKeys);
     <U extends Engine> UserTransactionConfiguration<U> newUserTransactionConfiguration(Object key, TransactionDescriptor desc, Object ...resourceKeys);
 }
