@@ -14,30 +14,18 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.transaction;
+package org.molasdin.wbase.transaction.context;
+
+import java.util.Set;
 
 /**
- * Created by molasdin on 1/30/16.
+ * Created by dbersenev on 14.04.2016.
  */
-public enum Requirement {
-    ALWAYS_NEW {
-        @Override
-        public boolean hasNewSemantics() {
-            return true;
-        }
-    },
-    ALWAYS_NEW_LINKED {
-        @Override
-        public boolean hasNewSemantics() {
-            return true;
-        }
-    },
-    NESTED,
-    NEW_OR_PROPAGATED,
-    PROPAGATED_ONLY;
+public interface TransactionResource<T> extends AutoCloseable{
+    T resource();
+    Set<ExtendedTransaction> clients();
+    boolean isStable();
+    default void close() {
 
-
-    public boolean hasNewSemantics() {
-        return false;
     }
 }

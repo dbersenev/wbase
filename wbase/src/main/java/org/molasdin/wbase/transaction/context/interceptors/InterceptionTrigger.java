@@ -14,30 +14,20 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.transaction;
+package org.molasdin.wbase.transaction.context.interceptors;
 
 /**
- * Created by molasdin on 1/30/16.
+ * Created by dbersenev on 13.04.2016.
  */
-public enum Requirement {
-    ALWAYS_NEW {
-        @Override
-        public boolean hasNewSemantics() {
-            return true;
-        }
-    },
-    ALWAYS_NEW_LINKED {
-        @Override
-        public boolean hasNewSemantics() {
-            return true;
-        }
-    },
-    NESTED,
-    NEW_OR_PROPAGATED,
-    PROPAGATED_ONLY;
+public enum InterceptionTrigger {
+    START,
 
+    PRE_COMMIT,
+    POST_COMMIT,
 
-    public boolean hasNewSemantics() {
-        return false;
-    }
+    PRE_ROLLBACK,
+    POST_ROLLBACK,
+
+    PRE_CLOSE,
+    POST_CLOSE
 }

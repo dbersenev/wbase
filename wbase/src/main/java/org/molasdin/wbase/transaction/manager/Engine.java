@@ -21,7 +21,5 @@ import java.io.Closeable;
 /**
  * Created by dbersenev on 29.10.2014.
  */
-public interface Engine extends AutoCloseable{
-    @Override
-    void close();
+public interface Engine{
 }

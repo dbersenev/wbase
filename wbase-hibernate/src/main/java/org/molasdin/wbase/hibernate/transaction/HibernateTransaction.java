@@ -38,7 +38,6 @@ public class HibernateTransaction extends AbstractTransaction {
         this.newIsolation = newIsolation;
     }
 
-    @Override
     public void begin() {
         session.doWork(connection -> {
             isolation = connection.getTransactionIsolation();
@@ -69,6 +68,5 @@ public class HibernateTransaction extends AbstractTransaction {
     @Override
     public void close() {
         session.doWork((c) -> c.setTransactionIsolation(isolation));
-        session.close();
     }
 }

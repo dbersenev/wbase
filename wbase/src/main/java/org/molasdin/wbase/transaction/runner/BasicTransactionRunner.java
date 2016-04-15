@@ -59,6 +59,7 @@ public class BasicTransactionRunner<T extends Engine> implements TransactionRunn
                 transaction.commit();
                 return result;
             } catch (TransactionInterruptedException ex) {
+                transaction.rollback();
                 return null;
             } catch (Exception ex) {
                 transaction.rollback();

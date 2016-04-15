@@ -23,10 +23,6 @@ public class AbstractTransaction implements Transaction {
     private boolean wasRolledBack = false;
     private boolean wasCommitted = false;
 
-    public void begin() {
-
-    }
-
     @Override
     public void rollback() {
         wasRolledBack = true;

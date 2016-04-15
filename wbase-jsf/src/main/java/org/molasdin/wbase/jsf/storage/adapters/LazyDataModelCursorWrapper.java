@@ -49,7 +49,7 @@ public class LazyDataModelCursorWrapper<T> extends AbstractLazyDataModelCursorWr
         }
 
         if (row != pageNumber()) {
-            cursor().setCurrentPage(pageNumber());
+            cursor().setCurrentPage(row);
         }
 
         processRowParameters(row, newPageSize);

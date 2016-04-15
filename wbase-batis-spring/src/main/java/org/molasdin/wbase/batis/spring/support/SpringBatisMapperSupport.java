@@ -57,7 +57,7 @@ public class SpringBatisMapperSupport extends CommonBatisMapperSupport {
             return;
         }
         SpringTransactionManager<BatisMapperEngine> provider = new BatisSpringTransactionManager(template);
-        provider.setTransactionManagerCommon(manager);
+        provider.setTransactionManager(manager);
         setDefaultTransactionProvider(provider);
     }
 

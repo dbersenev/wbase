@@ -37,11 +37,14 @@ public class BasicHibernateTransactionManager extends AbstractTransactionManager
     @Override
     protected void configure(UserTransactionConfiguration<HibernateEngine> cfg) {
         Session session = null;
-        if(!cfg.hasResource(sessionFactory)) {
-            cfg.bindResource(sessionFactory, sessionFactory.openSession());
+        if(cfg.descriptor().requirement().hasNewSemantics() || !cfg.hasResource(sessionFactory)) {
+            Session s = sessionFactory.openSession();
+            cfg.bindResource(sessionFactory, s, Session::close);
         }
         session = cfg.resource(sessionFactory);
-        cfg.setUnderline(new BasicHibernateEngine(session), new HibernateTransaction(session, cfg.descriptor().isolation().jdbcCode()));
+        HibernateTransaction tx = new HibernateTransaction(session, cfg.descriptor().isolation().jdbcCode());
+        tx.begin();
+        cfg.setUnderline(new BasicHibernateEngine(session), tx);
     }
 
     @Override

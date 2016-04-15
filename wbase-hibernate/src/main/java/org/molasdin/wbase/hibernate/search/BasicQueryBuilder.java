@@ -19,16 +19,20 @@ package org.molasdin.wbase.hibernate.search;
 import org.apache.commons.lang3.text.StrBuilder;
 import org.hibernate.criterion.MatchMode;
 import org.molasdin.wbase.hibernate.util.HibernateUtils;
+import org.molasdin.wbase.storage.Order;
 
 /**
  * Created by dbersenev on 24.02.14.
  */
 public class BasicQueryBuilder implements QueryBuilder {
+    private final static String ORDER_BY = "order by ";
+    private final static String ORDER_BY_CLAUSE = "%s %s";
     private final static String FROM = "from %s as %s";
     private final static String INNER_JOIN = "inner join %s as %s";
     private final static String OP = "%s %s %s";
 
     private boolean hasCondition = false;
+    private boolean orderBy= false;
 
     private StrBuilder builder = new StrBuilder();
 
@@ -39,6 +43,11 @@ public class BasicQueryBuilder implements QueryBuilder {
             builder.appendSeparator(" AND ");
         }
         builder.append(value);
+        if(value.toUpperCase().contains("WHERE")) {
+            hasCondition = true;
+        }
+
+        orderBy = value.toUpperCase().contains("ORDER BY");
         return this;
     }
 
@@ -54,7 +63,7 @@ public class BasicQueryBuilder implements QueryBuilder {
 
     @Override
     public QueryBuilder addWhere(BuilderScope scope, boolean isEnabled) {
-        if(!isEnabled){
+        if(hasCondition || !isEnabled){
             return this;
         }
         addPart("where");
@@ -83,6 +92,18 @@ public class BasicQueryBuilder implements QueryBuilder {
     public QueryBuilder addOp(String prop, String param, String op){
         addPart(String.format(OP, prop, param, op));
         hasCondition = true;
+        return this;
+    }
+
+    @Override
+    public QueryBuilder addOrder(String prop, Order order) {
+        if(!orderBy) {
+            builder.appendSeparator(' ');
+            builder.append("order by ");
+        } else {
+            builder.append(',');
+        }
+        builder.append(String.format(ORDER_BY_CLAUSE, prop, order.equals(Order.ASC) ? "asc" : "desc"));
         return this;
     }
 

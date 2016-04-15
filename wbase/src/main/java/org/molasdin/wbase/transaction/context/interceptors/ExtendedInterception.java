@@ -16,30 +16,73 @@
 
 package org.molasdin.wbase.transaction.context.interceptors;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 /**
  * Created by molasdin on 4/6/16.
  */
 public class ExtendedInterception implements Interception{
-    private List<Interceptor<TransactionEvent>> startListeners = new ArrayList<>();
 
-    private List<Interceptor<TerminatableTransactionEvent>> preCommitListeners = new ArrayList<>();
-    private List<Interceptor<TransactionEvent>> postCommitListeners = new ArrayList<>();
+    private ExtendedInterception parent = null;
+    private Set<ExtendedInterception> interceptions = new LinkedHashSet<>();
 
-    private List<Interceptor<TransactionEvent>> preCloseListeners = new ArrayList<>();
-    private List<Interceptor<TransactionEvent>> postCloseListeners = new ArrayList<>();
+    private Set<Interceptor<TransactionEvent>> startListeners = new LinkedHashSet<>();
 
-    private List<Interceptor<TerminatableTransactionEvent>> preRollbackListeners = new ArrayList<>();
-    private List<Interceptor<TransactionEvent>> postRollbackListeners = new ArrayList<>();
+    private Set<Interceptor<TerminatableTransactionEvent>> preCommitListeners = new LinkedHashSet<>();
+    private Set<Interceptor<TransactionEvent>> postCommitListeners = new LinkedHashSet<>();
+
+    private Set<Interceptor<TransactionEvent>> preCloseListeners = new LinkedHashSet<>();
+    private Set<Interceptor<TransactionEvent>> postCloseListeners = new LinkedHashSet<>();
+
+    private Set<Interceptor<TerminatableTransactionEvent>> preRollbackListeners = new LinkedHashSet<>();
+    private Set<Interceptor<TransactionEvent>> postRollbackListeners = new LinkedHashSet<>();
+
+    private Map<Interceptor<? extends TransactionEvent>, InterceptionTrigger> lookup = new HashMap<>();
+
+    @Override
+    public <U extends TransactionEvent> void remove(Interceptor<U> consumer) {
+        if(lookup.containsKey(consumer)) {
+            InterceptionTrigger tr = lookup.get(consumer);
+            switch (tr) {
+                case START:
+                    startListeners.remove(consumer);
+                    break;
+                case PRE_COMMIT:
+                    preCommitListeners.remove(consumer);
+                    break;
+                case POST_COMMIT:
+                    postCommitListeners.remove(consumer);
+                    break;
+                case PRE_ROLLBACK:
+                    preRollbackListeners.remove(consumer);
+                    break;
+                case POST_ROLLBACK:
+                    postRollbackListeners.remove(consumer);
+                    break;
+                case PRE_CLOSE:
+                    preCloseListeners.remove(consumer);
+                    break;
+                case POST_CLOSE:
+                    postCloseListeners.remove(consumer);
+            }
+            lookup.remove(consumer);
+        }
+    }
+
+    public void addInterception(ExtendedInterception interception){
+        interceptions.add(interception);
+        interception.parent = this;
+    }
 
     public void addStart(Interceptor<TransactionEvent> consumer) {
         startListeners.add(consumer);
     }
     public void emitStart(TransactionEvent event){
         invokeCommonListeners(event, startListeners);
+        for(ExtendedInterception entry: interceptions) {
+            entry.emitStart(event);
+        }
     }
 
     public void addPreCommit(Interceptor<TerminatableTransactionEvent> consumer) {
@@ -47,6 +90,9 @@ public class ExtendedInterception implements Interception{
     }
     public void emitPreCommit(TerminatableTransactionEvent event){
         invokeTerminatableListeners(event, preCommitListeners);
+        for(ExtendedInterception entry: interceptions) {
+            entry.emitPreCommit(event);
+        }
     }
 
     public void addPostCommit(Interceptor<TransactionEvent> consumer) {
@@ -54,6 +100,9 @@ public class ExtendedInterception implements Interception{
     }
     public void emitPostCommit(TransactionEvent event){
         invokeCommonListeners(event,  postCommitListeners);
+        for(ExtendedInterception entry: interceptions) {
+            entry.emitPostCommit(event);
+        }
     }
 
     public void addPreRollback(Interceptor<TerminatableTransactionEvent> consumer) {
@@ -61,6 +110,9 @@ public class ExtendedInterception implements Interception{
     }
     public void emitPreRollback(TerminatableTransactionEvent event){
         invokeTerminatableListeners(event, preRollbackListeners);
+        for(ExtendedInterception entry: interceptions) {
+            entry.emitPreRollback(event);
+        }
     }
 
     public void addPostRollback(Interceptor<TransactionEvent> consumer) {
@@ -68,6 +120,9 @@ public class ExtendedInterception implements Interception{
     }
     public void emitPostRollback(TransactionEvent event){
         invokeCommonListeners(event, postRollbackListeners);
+        for(ExtendedInterception entry: interceptions) {
+            entry.emitPostRollback(event);
+        }
     }
 
     public void addPreClose(Interceptor<TransactionEvent> consumer) {
@@ -75,6 +130,9 @@ public class ExtendedInterception implements Interception{
     }
     public void emitPreClose(TransactionEvent event){
         invokeCommonListeners(event, preCloseListeners);
+        for(ExtendedInterception entry: interceptions) {
+            entry.emitPreClose(event);
+        }
     }
 
     public void addPostClose(Interceptor<TransactionEvent> consumer) {
@@ -82,25 +140,23 @@ public class ExtendedInterception implements Interception{
     }
     public void emitPostClose(TransactionEvent event){
         invokeCommonListeners(event, postCloseListeners);
+        for(ExtendedInterception entry: interceptions) {
+            entry.emitPostClose(event);
+        }
     }
 
-    public void addFrom(ExtendedInterception interception) {
-        startListeners.addAll(interception.startListeners);
-        preCommitListeners.addAll(interception.preCommitListeners);
-        postCommitListeners.addAll(interception.postCloseListeners);
-        preRollbackListeners.addAll(interception.preRollbackListeners);
-        postRollbackListeners.addAll(interception.postRollbackListeners);
-        preCloseListeners.addAll(interception.preCloseListeners);
-        postCloseListeners.addAll(interception.postCloseListeners);
+    public void detach(){
+        parent.interceptions.remove(this);
+        parent = null;
     }
 
-    private void invokeCommonListeners(TransactionEvent event, List<Interceptor<TransactionEvent>> interceptors) {
+    private void invokeCommonListeners(TransactionEvent event, Set<Interceptor<TransactionEvent>> interceptors) {
         for (Interceptor<TransactionEvent> entry : interceptors) {
             entry.intercept(event);
         }
     }
 
-    private void invokeTerminatableListeners(TerminatableTransactionEvent event, List<Interceptor<TerminatableTransactionEvent>> interceptors) {
+    private void invokeTerminatableListeners(TerminatableTransactionEvent event, Set<Interceptor<TerminatableTransactionEvent>> interceptors) {
         for (Interceptor<TerminatableTransactionEvent> entry : interceptors) {
             entry.intercept(event);
         }

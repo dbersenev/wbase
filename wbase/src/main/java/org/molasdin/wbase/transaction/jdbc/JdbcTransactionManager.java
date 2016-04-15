@@ -38,9 +38,9 @@ public class JdbcTransactionManager extends AbstractTransactionManager<JdbcEngin
     @Override
     protected void configure(UserTransactionConfiguration<JdbcEngine> cfg) throws Exception {
         boolean isSavePoint = cfg.descriptor().requirement().equals(Requirement.NESTED);
-        if (!cfg.hasResource(connectionSource.key())) {
+        if (!cfg.hasResource(connectionSource.key()) || cfg.descriptor().requirement().hasNewSemantics()) {
             throwIfPropagationRequired(cfg.descriptor());
-            cfg.bindResource(connectionSource.key(), connectionSource.value());
+            cfg.bindResource(connectionSource.key(), connectionSource.value(), Connection::close);
             isSavePoint = false;
         }
         Connection connection = cfg.resource(connectionSource.key());

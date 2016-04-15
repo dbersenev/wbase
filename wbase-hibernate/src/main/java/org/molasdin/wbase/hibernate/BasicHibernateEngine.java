@@ -93,9 +93,4 @@ public class BasicHibernateEngine implements HibernateEngine {
             query.setParameter(key, parameters.get(key));
         }
     }
-
-    @Override
-    public void close() {
-
-    }
 }

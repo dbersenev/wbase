@@ -17,6 +17,7 @@
 package org.molasdin.wbase.storage.cursor;
 
 import org.molasdin.wbase.storage.FilterAndOrder;
+import org.molasdin.wbase.transaction.UserTransaction;
 import org.molasdin.wbase.transaction.manager.Engine;
 import org.molasdin.wbase.transaction.manager.TransactionManager;
 import org.molasdin.wbase.transaction.Transaction;
@@ -41,8 +42,7 @@ public abstract class DelegatingExtBiDirectionalCursorFactory<T, F extends Engin
     @Override
     public BiDirectionalBatchCursor<T> newCursor(long pageSize) {
         long count = 0;
-        try(Transaction<F> tx = processingManager().createTransaction(transactionDescriptor())){
-            tx.begin();
+        try(UserTransaction<F> tx = processingManager().createTransaction(transactionDescriptor())){
             count = countForCursor(tx.engine(), filterAndOrder());
             tx.commit();
         }
@@ -62,7 +62,7 @@ public abstract class DelegatingExtBiDirectionalCursorFactory<T, F extends Engin
                 return loadForCursor(ctx, filterAndOrder());
             }
         };
-        cur.setTotals(count);
+        cur.setSize(count);
         return cur;
     }
 

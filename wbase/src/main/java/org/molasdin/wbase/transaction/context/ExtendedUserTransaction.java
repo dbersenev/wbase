@@ -26,6 +26,39 @@ import org.molasdin.wbase.transaction.manager.Engine;
  */
 public class ExtendedUserTransaction<T extends Engine> extends ExtendedTransaction implements UserTransaction<T> {
 
+    private static class TransactionProxy<U extends Engine> implements UserTransaction<U> {
+        private ExtendedUserTransaction<U> tx = null;
+
+        public TransactionProxy(ExtendedUserTransaction<U> tx) {
+            this.tx = tx;
+        }
+
+        @Override
+        public UserTransactionContext context() {
+            return tx.context();
+        }
+
+        @Override
+        public void rollback() {
+            tx.rollback();
+        }
+
+        @Override
+        public boolean wasRolledBack() {
+            return tx.wasRolledBack();
+        }
+
+        @Override
+        public U engine() {
+            return tx.engine();
+        }
+
+        @Override
+        public void close() {
+            tx = null;
+        }
+    }
+
     private T engine;
 
     private UserTransaction<T> rollbackOnlyProxy = null;
@@ -35,24 +68,23 @@ public class ExtendedUserTransaction<T extends Engine> extends ExtendedTransacti
         this.engine = engine;
     }
 
+    @Override
+    public T engine() {
+        return engine;
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        if(rollbackOnlyProxy != null){
+            rollbackOnlyProxy.close();
+            rollbackOnlyProxy = null;
+        }
+    }
+
     public UserTransaction<T> rollbackOnlyProxy(){
-        if(rollbackOnlyProxy == null){
-            rollbackOnlyProxy =  new AbstractUserTransaction<T>(engine) {
-                @Override
-                public UserTransactionContext context() {
-                    return ExtendedUserTransaction.this.context();
-                }
-
-                @Override
-                public void rollback() {
-                    ExtendedUserTransaction.this.rollback();
-                }
-
-                @Override
-                public boolean wasRolledBack() {
-                    return ExtendedUserTransaction.this.wasRolledBack();
-                }
-            };
+        if(!isClosed() && rollbackOnlyProxy == null){
+            rollbackOnlyProxy =  new TransactionProxy<>(this);
         }
         return rollbackOnlyProxy;
     }

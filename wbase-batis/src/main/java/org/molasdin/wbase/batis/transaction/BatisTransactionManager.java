@@ -57,16 +57,19 @@ public class BatisTransactionManager extends AbstractTransactionManager<BatisMap
         SqlSession session = null;
         TransactionDescriptor descriptor = cfg.descriptor();
         boolean hasSavePoint = descriptor.requirement().equals(Requirement.NESTED);
-        if (cfg.hasResource(sessionFactory)) {
+        boolean newRequired = cfg.descriptor().requirement().hasNewSemantics();
+        if (!newRequired && cfg.hasResource(sessionFactory)) {
             session = cfg.resource(sessionFactory);
-        } else if (connectionSource != null && cfg.hasResource(connectionSource.key())) {
+        } else if (!newRequired && connectionSource != null && cfg.hasResource(connectionSource.key())) {
             Connection tmp = cfg.resource(connectionSource.key());
-            cfg.bindResource(connectionSource.key(), sessionFactory.openSession(tmp));
+            SqlSession s = sessionFactory.openSession(tmp);
+            cfg.bindResource(connectionSource.key(), s, SqlSession::close);
             session = cfg.resource(connectionSource.key());
         } else {
             throwIfPropagationRequired(descriptor);
             TransactionIsolationLevel level = levelToBatisLevel(descriptor.isolation(), sessionFactory.getConfiguration());
-            cfg.bindResource(sessionFactory, level != null ? sessionFactory.openSession(level) : sessionFactory.openSession());
+            SqlSession s = level != null ? sessionFactory.openSession(level) : sessionFactory.openSession();
+            cfg.bindResource(sessionFactory, s, SqlSession::close);
             session = cfg.resource(sessionFactory);
             if(connectionSource != null) {
                 cfg.bindResource(connectionSource.key(), session.getConnection());

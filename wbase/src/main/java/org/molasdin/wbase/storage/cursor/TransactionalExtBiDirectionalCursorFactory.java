@@ -16,6 +16,7 @@
 
 package org.molasdin.wbase.storage.cursor;
 
+import org.molasdin.wbase.transaction.TransactionDescriptors;
 import org.molasdin.wbase.transaction.manager.Engine;
 import org.molasdin.wbase.transaction.manager.TransactionManager;
 import org.molasdin.wbase.transaction.TransactionDescriptor;
@@ -27,7 +28,7 @@ public abstract class TransactionalExtBiDirectionalCursorFactory<T, F extends En
 
 
     private TransactionManager<F> pm;
-    private TransactionDescriptor desc;
+    private TransactionDescriptor desc = TransactionDescriptors.INSTANCE.simple();
 
     public TransactionalExtBiDirectionalCursorFactory(TransactionManager<F> pm, TransactionDescriptor desc) {
         this.pm = pm;

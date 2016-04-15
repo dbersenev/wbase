@@ -55,10 +55,6 @@ public class BatisRepositoryFactoryBean<T, M extends CommonMapper<T>, F extends 
         this.repositoryClass = repositoryClass;
     }
 
-    public void setMapperId(String mapperId) {
-        this.mapperId = mapperId;
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public F getObject() throws Exception {
@@ -67,12 +63,6 @@ public class BatisRepositoryFactoryBean<T, M extends CommonMapper<T>, F extends 
         support.setTransactionManager(txManager);
         BatisRepository<T,M,?> repo = ConstructorUtils.invokeExactConstructor(repositoryClass, new Object[]{support},
                 new Class[]{BatisMapperSupport.class});
-        Class<T> mappedClass = BatisUtil.mappedClass(mapperClass);
-        if(StringUtils.isBlank(mapperId)){
-            repo.setMapperId(mappedClass.getCanonicalName());
-        } else{
-            repo.setMapperId(mapperId);
-        }
         return (F)repo;
     }
 

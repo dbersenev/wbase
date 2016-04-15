@@ -37,13 +37,46 @@ public class ExtendedTransaction extends DelegatingTransaction {
     private TransactionEvent commonEvent = null;
 
     private Transaction rollbackOnlyProxy = null;
+    private boolean closed = false;
+
+    private static class TransactionProxy implements Transaction {
+        private ExtendedTransaction tx = null;
+
+        public TransactionProxy(ExtendedTransaction tx) {
+            this.tx = tx;
+        }
+
+        @Override
+        public UserTransactionContext context() {
+            return tx.context();
+        }
+
+        @Override
+        public void rollback() {
+            tx.rollback();
+        }
+
+        @Override
+        public boolean wasRolledBack() {
+            return tx.wasRolledBack();
+        }
+
+        @Override
+        public void close() {
+            this.tx = null;
+        }
+    }
 
     public ExtendedTransaction(Transaction tx, UserTransactionContext ctx) {
         super(tx);
         this.ctx = ctx;
     }
 
-    public ExtendedInterception interception(){
+    public boolean isClosed(){
+        return closed;
+    }
+
+    public ExtendedInterception interception() {
         return interception;
     }
 
@@ -57,7 +90,7 @@ public class ExtendedTransaction extends DelegatingTransaction {
             throw new TransactionCommittedException();
         }
         interception.emitPreCommit(terminatableEvent());
-        if(!terminatableEvent.isTerminated()) {
+        if (!terminatableEvent.isTerminated()) {
             super.commit();
             interception.emitPostCommit(commonEvent());
         }
@@ -74,7 +107,7 @@ public class ExtendedTransaction extends DelegatingTransaction {
             throw new TransactionRolledBackException();
         }
         interception.emitPreRollback(terminatableEvent());
-        if(!terminatableEvent.isTerminated()) {
+        if (!terminatableEvent.isTerminated()) {
             super.rollback();
             interception.emitPostRollback(commonEvent());
         }
@@ -82,38 +115,31 @@ public class ExtendedTransaction extends DelegatingTransaction {
 
     @Override
     public void close() {
-        if (!(wasCommitted() || wasRolledBack())) {
-            this.rollback();
+        if(!isClosed()){
+            if (!(wasCommitted() || wasRolledBack())) {
+                this.rollback();
+            }
+            interception.emitPreClose(commonEvent());
+            super.close();
+            interception.emitPostClose(commonEvent());
+            if (rollbackOnlyProxy != null) {
+                rollbackOnlyProxy.close();
+                rollbackOnlyProxy = null;
+            }
+            closed = true;
+            interception = null;
+            ctx = null;
         }
-        interception.emitPreClose(commonEvent());
-        super.close();
-        interception.emitPostClose(commonEvent());
     }
 
-    public Transaction rollbackOnlyProxy(){
-        if(rollbackOnlyProxy == null) {
-            rollbackOnlyProxy = new Transaction() {
-                @Override
-                public UserTransactionContext context() {
-                    return ctx;
-                }
-
-                @Override
-                public void rollback() {
-                    ExtendedTransaction.this.rollback();
-                }
-
-                @Override
-                public boolean wasRolledBack() {
-                    return ExtendedTransaction.this.wasRolledBack();
-                }
-            };
+    public Transaction rollbackOnlyProxy() {
+        if (!closed && rollbackOnlyProxy == null) {
+            rollbackOnlyProxy = new TransactionProxy(this);
         }
-
         return rollbackOnlyProxy;
     }
 
-    private TransactionEvent commonEvent(){
+    private TransactionEvent commonEvent() {
         if (commonEvent == null) {
             commonEvent = () -> this;
         }
@@ -121,7 +147,7 @@ public class ExtendedTransaction extends DelegatingTransaction {
         return commonEvent;
     }
 
-    private TerminatableTransactionEvent terminatableEvent(){
+    private TerminatableTransactionEvent terminatableEvent() {
         if (terminatableEvent == null) {
             terminatableEvent = new BasicTerminatableTransactionEvent(this);
         } else {

@@ -20,18 +20,12 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.molasdin.wbase.hibernate.transaction.BasicHibernateTransactionManager;
 import org.molasdin.wbase.storage.BasicSupport;
-import org.molasdin.wbase.transaction.DetachedEngine;
 import org.molasdin.wbase.transaction.manager.TransactionManager;
 
 public class BasicHibernateSupport extends BasicSupport<HibernateEngine> implements HibernateSupport {
 
     private SessionFactory sessionFactory;
 
-    private HibernateCursorFactory cursorFactory;
-
-    public void setCursorFactory(HibernateCursorFactory resultFactory) {
-        this.cursorFactory = resultFactory;
-    }
 
     public Session currentSession(){
         return sessionFactory().getCurrentSession();
@@ -48,27 +42,10 @@ public class BasicHibernateSupport extends BasicSupport<HibernateEngine> impleme
     public SessionFactory sessionFactory(){
         return sessionFactory;
     }
-
-    @Override
-    public HibernateCursorFactory cursorFactory() {
-        return cursorFactory;
-    }
-
     @Override
     public TransactionManager<HibernateEngine> newDefaultProvider() {
         BasicHibernateTransactionManager provider = new BasicHibernateTransactionManager();
         provider.setSessionFactory(sessionFactory);
         return provider;
     }
-
-    public void init(){
-        if(cursorFactory == null){
-            cursorFactory = new BasicHibernateCursorFactory(defaultTransactionProvider());
-        }
-    }
-
-    public DetachedEngine<HibernateEngine> currentEngine(){
-        return defaultTransactionProvider().detachedEngine();
-    }
-
 }

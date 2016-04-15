@@ -18,6 +18,7 @@ package org.molasdin.wbase.transaction.context.config;
 
 import org.molasdin.wbase.transaction.Transaction;
 import org.molasdin.wbase.transaction.TransactionDescriptor;
+import org.molasdin.wbase.transaction.context.ResourceClosure;
 import org.molasdin.wbase.transaction.context.interceptors.Interception;
 import org.molasdin.wbase.transaction.context.interceptors.InterceptionMode;
 
@@ -27,9 +28,14 @@ import org.molasdin.wbase.transaction.context.interceptors.InterceptionMode;
 public interface TransactionConfiguration {
     <U> U resource(Object key);
     boolean hasResource(Object key);
-    void bindResource(Object key, Object resource);
+    <U> void bindResource(Object key, U resource);
+    <U> void bindResource(Object key, U resource, ResourceClosure<U> onClose);
+    <U> void bindStableResource(Object key, U resource);
+    <U> void bindStableResource(Object key, U resource, ResourceClosure<U> onClose);
     TransactionDescriptor descriptor();
     boolean hasTransaction();
+
+    void setUnderline(Transaction tx);
 
     void setInterceptionMode(InterceptionMode mode);
 

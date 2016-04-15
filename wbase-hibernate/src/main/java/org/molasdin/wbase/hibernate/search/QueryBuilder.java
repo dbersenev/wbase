@@ -17,6 +17,7 @@
 package org.molasdin.wbase.hibernate.search;
 
 import org.hibernate.criterion.MatchMode;
+import org.molasdin.wbase.storage.Order;
 
 /**
  * Created by dbersenev on 24.02.14.
@@ -30,6 +31,8 @@ public interface QueryBuilder {
     QueryBuilder ilikeWild(String prop, String value, MatchMode mode);
     QueryBuilder gt(String prop, String param);
     QueryBuilder lt(String prop, String param);
+
+    QueryBuilder addOrder(String prop, Order order);
 
     String query();
 }

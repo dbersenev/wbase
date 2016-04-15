@@ -16,6 +16,7 @@
 
 package org.molasdin.wbase.jsf.storage.adapters;
 
+import org.molasdin.wbase.storage.MutableFilterAndOrder;
 import org.molasdin.wbase.storage.Storable;
 import org.molasdin.wbase.jsf.storage.adapters.extra.BasicExtraData;
 import org.molasdin.wbase.jsf.storage.adapters.extra.ExtraData;
@@ -33,9 +34,7 @@ import java.util.*;
 public class LazyDataModelExtraCursorWrapper<T extends Storable<T>> extends AbstractLazyDataModelCursorWrapper<T> {
 
     private List<T> snapshot = new ArrayList<T>();
-    private long count;
     private ExtraData<T> extraData = new BasicExtraData<T>();
-    private boolean loaded = false;
 
     public LazyDataModelExtraCursorWrapper(ExtBiDirectionalCursorFactory<T> extBiDirectionalCursorFactory) {
         super(extBiDirectionalCursorFactory);
@@ -54,26 +53,35 @@ public class LazyDataModelExtraCursorWrapper<T extends Storable<T>> extends Abst
         this.extraData = extraData;
     }
 
-    public List<T> load(int row, int pageSize, List<SortMeta> multiSortMeta, Map<String, Object> stringStringMap) {
-        addOrders(multiSortMeta);
+    public List<T> load(int row, int newPageSize, List<SortMeta> multiSortMeta, Map<String, Object> stringStringMap) {
 
-        addFilters(stringStringMap);
+        MutableFilterAndOrder fo = null;
+        if(!multiSortMeta.isEmpty() && !stringStringMap.isEmpty()){
+            fo = new MutableFilterAndOrder();
+            addOrders(multiSortMeta, fo);
+            addFilters(stringStringMap, fo);
+        }
 
-        processRowParameters(row, pageSize);
+        if (cursor() == null || newPageSize != pageSize() || isUnstableCursor()) {
+            cursorFactory().setFilterAndOrder(fo);
+            setCursor(cursorFactory().newCursor(newPageSize));
+        }
 
+        if (row != pageNumber()) {
+            cursor().setCurrentPage(row);
+        }
+
+        processRowParameters(row, newPageSize);
+
+        snapshot.clear();
+        snapshot.addAll(cursor().data());
         //if nothing has been changed - return cached collection
-        if (isUseCache() && !snapshot.isEmpty() &&
-                (extraData.recordsRemoved().isEmpty())) {
-            //extra data manipulation cab be done without trip to db
+        if ((extraData.recordsRemoved().isEmpty())) {
+            //extra data manipulation can be done without trip to db
             List<T> newRecords = extraData.newRecords();
             if (newRecords.size() > 0) {
                 snapshot.addAll(0, newRecords);
-                int index = snapshot.size();
-                while (snapshot.size() > pageSize) {
-                    snapshot.remove(index - 1);
-                    index--;
-                }
-                count += newRecords.size();
+                snapshot.subList(pageSize(), snapshot.size()).clear();
                 newRecords.clear();
             }
             return snapshot;
@@ -82,36 +90,21 @@ public class LazyDataModelExtraCursorWrapper<T extends Storable<T>> extends Abst
         extraData.recordsRemoved().clear();
         extraData.newRecords().clear();
 
-        snapshot = new ArrayList<T>();
         //if extra data has been added and it is within selected page
         if (extraData.data().size() > 0 && (row < extraData.data().size())) {
             //how much data to display from extra data
             int dataLeft = extraData.data().size() - row;
             //right offset inside extra data
-            int rightOffset = dataLeft > pageSize ? pageSize : dataLeft;
+            int rightOffset = dataLeft > pageSize() ? pageSize() : dataLeft;
             //iterator with fast checks for the extra data window
             ListIterator<T> iter = extraData.data().listIterator(row);
             int nextIndex = 0;
             while (iter.hasNext() && (iter.nextIndex() < row + rightOffset)) {
                 snapshot.add(nextIndex++, iter.next());
             }
-            //decrease page size for the db part
-            pageSize = pageSize - (rightOffset - row);
-            //always starting with 0 in this case
-            row = 0;
-            //count refresh without trip to db
-            count = snapshot.size() + (extraData.data().size() - snapshot.size());
-        } else {
-            //determine how much of page is consumed by extra data
-            row -= extraData.data().size();
-        }
-
-        if (pageSize > 0) {
-            setUseCache(false);
-            result().setPageSize(pageSize);
-            result().setCurrentOffset(row);
-            result().load();
-            snapshot.addAll(result().data());
+            if(snapshot.size() > pageSize()) {
+                snapshot.subList(pageSize(), snapshot.size()).clear();
+            }
         }
 
         return snapshot;
@@ -119,19 +112,7 @@ public class LazyDataModelExtraCursorWrapper<T extends Storable<T>> extends Abst
 
     @Override
     public int getRowCount() {
-        if (!isUseCache()) {
-            count = result().totalRecords();
-            count += extraData.data().size();
-            setUseCache(true);
-        }
-        return (int) count;
-    }
-
-    @Override
-    public void setRowCount(int rowCount) {
-        super.setRowCount(rowCount);
-        count = rowCount;
-        setUseCache(true);
+        return (int)cursor().size() + extraData.data().size();
     }
 
     public void invalidateCache() {

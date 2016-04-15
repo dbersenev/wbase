@@ -17,11 +17,12 @@
 package org.molasdin.wbase.transaction.runner;
 
 import org.molasdin.wbase.transaction.Transaction;
+import org.molasdin.wbase.transaction.UserTransaction;
 import org.molasdin.wbase.transaction.manager.Engine;
 
 /**
  * Created by dbersenev on 18.02.2016.
  */
 public interface TransactionalVoid<T extends Engine> {
-    void run(Transaction<T> tx) throws Exception;
+    void run(UserTransaction<T> tx) throws Exception;
 }

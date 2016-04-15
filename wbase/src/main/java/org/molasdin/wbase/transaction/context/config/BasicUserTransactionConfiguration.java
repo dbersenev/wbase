@@ -31,77 +31,15 @@ import java.util.function.Consumer;
 /**
  * Created by dbersenev on 29.03.2016.
  */
-public class BasicUserTransactionConfiguration<T extends Engine> implements UserTransactionConfiguration<T>, ExtendedUserConfiguration<T>{
-
-    private Map<Object, Object> localResources = new HashMap<>();
-    private Set<Object> newResources = new HashSet<>();
-    private TransactionDescriptor descriptor;
-    private boolean hasTx;
-    private Object key;
+public class BasicUserTransactionConfiguration<T extends Engine> extends BasicTransactionConfiguration implements ExtendedUserConfiguration<T>{
     private Pair<Transaction, T> underline = null;
-
-    private Map<InterceptionMode, ExtendedInterception> interceptions = new EnumMap<>(InterceptionMode.class);
-    private InterceptionMode currentInterceptionMode = InterceptionMode.DESCENDANTS;
 
     private UserConfigurationCallback listener;
 
     public BasicUserTransactionConfiguration(Object key, TransactionDescriptor descriptor, boolean hasTx, UserConfigurationCallback listener) {
-        this.key = key;
-        this.descriptor = descriptor;
-        this.hasTx = hasTx;
+        super(key, descriptor, hasTx);
         this.listener = listener;
     }
-
-    @Override
-    public ExtendedInterception interception() {
-        if(!interceptions.containsKey(currentInterceptionMode)) {
-            setInterceptionMode(currentInterceptionMode);
-        }
-        return interceptions.get(currentInterceptionMode);
-    }
-
-    @Override
-    public void setInterceptionMode(InterceptionMode mode) {
-        if(!interceptions.containsKey(mode)){
-            interceptions.put(mode, new ExtendedInterception());
-        }
-        currentInterceptionMode = mode;
-    }
-
-    @Override
-    public Map<InterceptionMode, ExtendedInterception> interceptions() {
-        return interceptions;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <U> U resource(Object key) {
-        return (U) localResources.get(key);
-    }
-
-    @Override
-    public boolean hasResource(Object key) {
-        return localResources.containsKey(key);
-    }
-
-    @Override
-    public void bindResource(Object key, Object resource) {
-        if(!localResources.containsKey(key) || resource.equals(localResources.get(key))) {
-            localResources.put(key, resource);
-            newResources.add(key);
-        }
-    }
-
-    @Override
-    public Set<Object> freshResources() {
-        return newResources;
-    }
-
-    @Override
-    public TransactionDescriptor descriptor() {
-        return descriptor;
-    }
-
 
     @Override
     public void setUnderline(T engine, Transaction newTx) {
@@ -109,27 +47,6 @@ public class BasicUserTransactionConfiguration<T extends Engine> implements User
             throw new RuntimeException();
         }
         underline = Pair.of(newTx, engine);
-    }
-
-    @Override
-    public boolean changed(){
-        return (underline != null) || !newResources.isEmpty();
-    }
-
-    @Override
-    public Object key() {
-        return key;
-    }
-
-    @Override
-    public Map<Object, Object> resources() {
-        return localResources;
-    }
-
-
-    @Override
-    public boolean hasTransaction() {
-        return hasTx;
     }
 
     @Override

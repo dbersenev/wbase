@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 /**
  * Created by dbersenev on 06.04.2016.
  */
-public interface ExtendedUserConfiguration<T extends Engine> extends ExtendedConfiguration {
+public interface ExtendedUserConfiguration<T extends Engine> extends ExtendedConfiguration, UserTransactionConfiguration<T> {
     @Override
     Pair<Transaction, T> underline();
 }

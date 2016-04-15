@@ -31,4 +31,6 @@ public interface Interception {
     void addPreClose(Interceptor<TransactionEvent> consumer);
     void addPostClose(Interceptor<TransactionEvent> consumer);
 
+    <U extends TransactionEvent> void remove(Interceptor<U> consumer);
+
 }

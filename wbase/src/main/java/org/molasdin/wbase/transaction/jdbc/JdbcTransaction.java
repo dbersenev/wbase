@@ -45,11 +45,6 @@ public class JdbcTransaction extends AbstractTransaction {
         this.isolation = isolation;
     }
 
-    @Override
-    public void begin() {
-
-    }
-
     public void setSavepoint(Savepoint savepoint) {
         this.savepoint = savepoint;
     }
@@ -82,12 +77,8 @@ public class JdbcTransaction extends AbstractTransaction {
     public void close() {
         try{
             connection.setTransactionIsolation(isolation);
-            if(connection.isClosed()){
-                return;
-            }
             if(savepoint == null){
                 connection.setAutoCommit(autocommit);
-                connection.close();
             }
         } catch (Exception ex){
             throw new RuntimeException(ex);
