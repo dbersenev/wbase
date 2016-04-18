@@ -1,7 +1,7 @@
 wbase
 =====
 
-WBase is the Java library of resusable components and integration with JSF/Spring/Hibernate/MyBatis/Etc.
+WBase is the Java library of reusable components and integration with JSF/Spring/Hibernate/MyBatis/Etc.
 
 *Why WBase? At first it was like "web base" but later it became more universal. So now it is "world base".*
 
