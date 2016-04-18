@@ -105,4 +105,8 @@ public class ReflectionHelper {
     public static boolean isNumeric(Object value){
         return value instanceof Number;
     }
+
+    static public void main(){
+
+    }
 }
