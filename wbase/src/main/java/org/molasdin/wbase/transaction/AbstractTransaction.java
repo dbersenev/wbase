@@ -26,11 +26,13 @@ public class AbstractTransaction implements Transaction {
     @Override
     public void rollback() {
         wasRolledBack = true;
+        wasCommitted = false;
     }
 
     @Override
     public void commit() {
-        setRolledBack(false);
+        wasRolledBack = false;
+        wasCommitted = true;
     }
 
     @Override

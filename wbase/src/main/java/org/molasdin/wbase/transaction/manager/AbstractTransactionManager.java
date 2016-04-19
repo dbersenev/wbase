@@ -34,7 +34,8 @@ public abstract class AbstractTransactionManager<T extends Engine> implements Tr
     public UserTransaction<T> createTransaction(TransactionDescriptor descriptor) {
         TransactionContext ctx = GlobalContextHolder.context();
         UserTransactionConfiguration<T> cfg = ctx.newUserTransactionConfiguration(this, descriptor, resourceKeys());
-        if(!cfg.hasTransaction()){
+        Requirement req = cfg.descriptor().requirement();
+        if(!cfg.hasTransaction() || req.hasNewSemantics() || req.equals(Requirement.NESTED)){
             try {
                 configure(cfg);
             } catch (Exception ex) {

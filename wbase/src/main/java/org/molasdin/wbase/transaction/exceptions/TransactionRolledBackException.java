@@ -19,5 +19,5 @@ package org.molasdin.wbase.transaction.exceptions;
 /**
  * Created by dbersenev on 04.04.2016.
  */
-public class TransactionRolledBackException extends RuntimeException {
+public class TransactionRolledBackException extends TransactionException  {
 }

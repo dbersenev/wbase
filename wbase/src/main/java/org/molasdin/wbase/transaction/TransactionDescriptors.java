@@ -31,4 +31,18 @@ public enum TransactionDescriptors {
     public TransactionDescriptor simple(){
         return simple;
     }
+
+    public TransactionDescriptor alwaysNew(){
+        return createdWithRequirement(Requirement.ALWAYS_NEW);
+    }
+
+    public TransactionDescriptor alwaysNewLinked(){
+        return createdWithRequirement(Requirement.ALWAYS_NEW_LINKED);
+    }
+
+    private TransactionDescriptor createdWithRequirement(Requirement requirement){
+        BasicTransactionDescriptor descr = new BasicTransactionDescriptor();
+        descr.setRequirement(requirement);
+        return descr;
+    }
 }

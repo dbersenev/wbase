@@ -89,6 +89,9 @@ public class ExtendedTransaction extends DelegatingTransaction {
         if (wasCommitted()) {
             throw new TransactionCommittedException();
         }
+        if(wasRolledBack()) {
+            throw new TransactionRolledBackException();
+        }
         interception.emitPreCommit(terminatableEvent());
         if (!terminatableEvent.isTerminated()) {
             super.commit();
@@ -106,6 +109,9 @@ public class ExtendedTransaction extends DelegatingTransaction {
         if (wasRolledBack()) {
             throw new TransactionRolledBackException();
         }
+        if(wasCommitted()) {
+            throw new TransactionCommittedException();
+        }
         interception.emitPreRollback(terminatableEvent());
         if (!terminatableEvent.isTerminated()) {
             super.rollback();
@@ -116,6 +122,7 @@ public class ExtendedTransaction extends DelegatingTransaction {
     @Override
     public void close() {
         if(!isClosed()){
+            closed = true;
             if (!(wasCommitted() || wasRolledBack())) {
                 this.rollback();
             }
@@ -126,7 +133,6 @@ public class ExtendedTransaction extends DelegatingTransaction {
                 rollbackOnlyProxy.close();
                 rollbackOnlyProxy = null;
             }
-            closed = true;
             interception = null;
             ctx = null;
         }

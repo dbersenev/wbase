@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.transaction.exceptions;
+package org.molasdin.wbase.transaction.manager;
 
 /**
- * Created by dbersenev on 04.04.2016.
+ * Created by dbersenev on 19.04.2016.
  */
-public class TransactionCommittedException extends TransactionException {
+public class SimpleEngine implements Engine {
+    private TestResource resource;
 
+    public SimpleEngine(TestResource resource) {
+        this.resource = resource;
+    }
+
+    public TestResource resource(){
+        return resource;
+    }
 }

@@ -40,4 +40,8 @@ public class GlobalContextHolder {
     public static void setSynchronization(TransactionContext txSync){
         synchronization.set(txSync);
     }
+
+    public static boolean isEmpty(){
+        return synchronization.get() == null;
+    }
 }

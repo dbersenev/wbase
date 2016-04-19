@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.transaction.exceptions;
+package org.molasdin.wbase.transaction.manager;
+
+import org.molasdin.wbase.transaction.AbstractTransaction;
+import org.molasdin.wbase.transaction.Transaction;
 
 /**
- * Created by dbersenev on 04.04.2016.
+ * Created by dbersenev on 19.04.2016.
  */
-public class TransactionCommittedException extends TransactionException {
+public class SimpleTransaction extends AbstractTransaction {
 
 }

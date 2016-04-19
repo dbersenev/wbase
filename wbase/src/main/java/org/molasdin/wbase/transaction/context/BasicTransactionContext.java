@@ -16,10 +16,12 @@
 
 package org.molasdin.wbase.transaction.context;
 
+import org.apache.commons.collections4.bag.CollectionBag;
 import org.apache.commons.lang3.tuple.Pair;
 import org.molasdin.wbase.transaction.*;
 import org.molasdin.wbase.transaction.context.config.*;
 import org.molasdin.wbase.transaction.context.interceptors.*;
+import org.molasdin.wbase.transaction.exceptions.TransactionNotConfiguredException;
 import org.molasdin.wbase.transaction.manager.Engine;
 
 import java.util.*;
@@ -83,10 +85,20 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
         return cfg;
     }
 
+    private boolean isNewRequired(ExtendedConfiguration cfg) {
+        return !cfg.hasTransaction() || cfg.changed()
+                || cfg.descriptor().requirement().hasNewSemantics()
+                || cfg.descriptor().requirement().equals(Requirement.NESTED);
+    }
+
     @Override
     public Transaction configureTransaction(ExtendedConfiguration cfg) {
-        if (cfg.hasTransaction() && !cfg.changed()) {
+        if (!isNewRequired(cfg)) {
             return transactions.get(cfg.key()).rollbackOnlyProxy();
+        }
+
+        if (cfg.underline() == null) {
+            throw new TransactionNotConfiguredException();
         }
 
         ExtendedTransaction tx = new ExtendedTransaction((Transaction) cfg.underline(), this);
@@ -97,8 +109,12 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
     @Override
     @SuppressWarnings("unchecked")
     public <T extends Engine> UserTransaction<T> configureUserTransaction(ExtendedUserConfiguration<T> cfg) {
-        if (cfg.hasTransaction() && !cfg.changed()) {
+        if (!isNewRequired(cfg)) {
             return ExtendedUserTransaction.class.cast(transactions.get(cfg.key())).rollbackOnlyProxy();
+        }
+
+        if (cfg.underline() == null) {
+            throw new TransactionNotConfiguredException();
         }
 
         ExtendedUserTransaction<T> tx = new ExtendedUserTransaction<>(cfg.underline().getLeft(), cfg.underline().getRight(), this);
@@ -108,8 +124,9 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
 
     private void prepareTransaction(ExtendedTransaction tx, ExtendedConfiguration cfg) {
         //interceptors configuration
+        Set<ExtendedInterception> interceptionsToRemove = new HashSet<>();
         if (!cfg.interceptions().isEmpty()) {
-            Set<ExtendedInterception> interceptionsToRemove = new HashSet<>();
+            Interception descInt = null;
             for (InterceptionMode mode : cfg.interceptions().keySet()) {
                 ExtendedInterception tmp = cfg.interceptions().get(mode);
                 //include current transaction to interceptor
@@ -121,26 +138,28 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
                 if (mode.equals(InterceptionMode.DESCENDANTS) || mode.equals(InterceptionMode.ALL)) {
                     interceptions.add(tmp);
                     interceptionsToRemove.add(tmp);
+                    if (mode.equals(InterceptionMode.DESCENDANTS)) {
+                        descInt = tmp;
+                    }
                 }
             }
-            //detach interceptors if transaction is no longer alive
-            if (!interceptionsToRemove.isEmpty()) {
-                tx.interception().addPostClose((e) -> {
-                    interceptions.removeAll(interceptionsToRemove);
-                    for (ExtendedInterception entry : interceptionsToRemove) {
-                        entry.detach();
-                    }
-                });
-            }
+
             for (ExtendedInterception entry : interceptions) {
-                tx.interception().addInterception(entry);
+                if (!entry.equals(descInt)) {
+                    tx.interception().addInterception(entry);
+                }
             }
         }
 
         //linked requirement configuration
         if (cfg.descriptor().requirement().equals(Requirement.ALWAYS_NEW_LINKED) && currentTransaction != null) {
-            tx.interception().addPostRollback((t) -> currentTransaction.rollback());
-            currentTransaction.interception().addPreRollback((e) -> tx.rollback());
+            ExtendedTransaction currentTemp = currentTransaction;
+            tx.interception().addPostRollback((e) -> currentTemp.rollback());
+            currentTransaction.interception().addPreRollback((e) -> {
+                if(!tx.wasCommitted() && !tx.wasRolledBack()) {
+                    tx.rollback();
+                }
+            });
             currentTransaction.interception().addPreClose(((e) -> tx.close()));
         }
 
@@ -170,63 +189,71 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
             resources.get(entry).clients().add(tx);
         }
 
-        if (!resourcesArchive.isEmpty()) {
-            tx.interception().addPreClose((t) -> {
-                resourcesArchive.keySet().retainAll(resources.keySet());
-                resources.putAll(resourcesArchive);
-            });
-        }
-        if (!resourcesToRemove.isEmpty()) {
-            tx.interception().addPreClose((e) -> {
-                for (Object entry : resourcesToRemove) {
-                    try (TransactionResource<?> tr = resources.get(entry)) {
-                        boolean generatingTx = false;
+        Map<Object, TransactionResource<?>> usedResources = cfg.resources();
+
+        tx.interception().addPreClose((e) -> {
+            //retain only what is left to restore
+            resourcesArchive.keySet().retainAll(resources.keySet());
+            //traverse all resources used by the transaction
+            for (Object entry : usedResources.keySet()) {
+                TransactionResource<?> tr = usedResources.get(entry);
+                //check if resource must be removed by this transaction
+                if (resourcesToRemove.contains(entry)) {
+                    try {
                         for (ExtendedTransaction t : tr.clients()) {
-                            if (t.equals(tx)) {
-                                generatingTx = true;
+                            if (t.equals(e.currentTransaction())) {
+                                resources.remove(entry);
+                            } else {
+                                t.close();
                             }
-                            t.close();
                         }
-                        if (generatingTx) {
-                            resources.remove(entry);
-                        }
+                    } finally {
+                        tr.close();
                     }
 
-                }
-            });
-        }
-
-        if (!resourcesToRemoveStable.isEmpty()) {
-            tx.interception().addPreClose((e) -> {
-                for (Object entry : resourcesToRemoveStable) {
-                    TransactionResource<?> res = resources.get(entry);
-                    if (res.clients().contains(e.currentTransaction()) && res.clients().size() == 1) {
-                        res.close();
+                } else {
+                    //check if it is stable resource
+                    if(resourcesToRemoveStable.contains(entry)) {
+                        if (tr.clients().contains(e.currentTransaction()) && tr.clients().size() == 1) {
+                            tr.close();
+                        }
                     }
-                    res.clients().remove(e.currentTransaction());
+                    //remove current resource client
+                    tr.clients().remove(e.currentTransaction());
                 }
-            });
-        }
+            }
+            //restore what was archived
+            resources.putAll(resourcesArchive);
+        });
 
-        //backup old transaction if managed by the same manager
-        if (cfg.hasTransaction()) {
-            ExtendedTransaction archTx = transactions.get(cfg.key());
-            Object archTxKey = cfg.key();
-            tx.interception().addPreClose((e) -> {
-                if (transactions.containsKey(archTxKey)) {
-                    transactions.put(archTxKey, archTx);
-                }
-            });
-        }
+        //retrieve transaction identified by the same key
+        ExtendedTransaction archTx = cfg.hasTransaction()?transactions.get(cfg.key()):null;
         transactions.put(cfg.key(), tx);
 
-        //universal clean up interceptor
-        //invoked on last transaction close
+        Object key = cfg.key();
+
         tx.interception().addPostClose((e) -> {
-            if (transactions.size() == 1 && transactions.containsKey(e.currentTransaction())) {
+            //detach context if last transaction is running
+            if (archTx == null && transactions.size() == 1 && transactions.containsKey(key)) {
                 GlobalContextHolder.setSynchronization(null);
             }
+            //restore archived transaction if present
+            if (archTx != null && transactions.containsKey(key)) {
+                transactions.put(key, archTx);
+            } else {
+                transactions.remove(key);
+            }
         });
+
+        //detach interceptors if transaction is no longer alive
+        if (!interceptionsToRemove.isEmpty()) {
+            tx.interception().addPostClose((e) -> {
+                interceptions.removeAll(interceptionsToRemove);
+                for (ExtendedInterception entry : interceptionsToRemove) {
+                    entry.detach();
+                }
+            });
+        }
 
         currentTransaction = tx;
 

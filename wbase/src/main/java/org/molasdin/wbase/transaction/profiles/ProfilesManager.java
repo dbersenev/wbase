@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by dbersenev on 10.12.2014.
@@ -35,17 +36,11 @@ public enum ProfilesManager {
         profiles.put("oracle", new OracleTransactionProfile());
     }
     public TransactionProfile profileFor(final String dbName){
-        String key = CollectionUtils.find(profiles.keySet(), new Predicate<String>() {
-            @Override
-            public boolean evaluate(String object) {
-                return StringUtils.containsIgnoreCase(dbName, object);
-            }
-        });
-
-        if(key == null){
+        Optional<String> key = profiles.keySet().stream().filter(e -> StringUtils.containsIgnoreCase(dbName, e)).findFirst();
+        if(!key.isPresent()){
             return commonTransactionProfile;
         }
 
-        return profiles.get(key);
+        return profiles.get(key.get());
     }
 }

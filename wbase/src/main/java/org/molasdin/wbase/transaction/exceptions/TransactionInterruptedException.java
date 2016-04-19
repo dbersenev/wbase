@@ -19,5 +19,5 @@ package org.molasdin.wbase.transaction.exceptions;
 /**
  * Created by dbersenev on 15.10.2014.
  */
-public class TransactionInterruptedException extends RuntimeException {
+public class TransactionInterruptedException extends TransactionException  {
 }

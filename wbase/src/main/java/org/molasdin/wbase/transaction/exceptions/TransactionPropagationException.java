@@ -19,5 +19,5 @@ package org.molasdin.wbase.transaction.exceptions;
 /**
  * Created by dbersenev on 21.03.2016.
  */
-public class TransactionPropagationException extends RuntimeException {
+public class TransactionPropagationException extends TransactionException  {
 }

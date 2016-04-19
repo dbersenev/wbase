@@ -14,11 +14,7 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.transaction.exceptions;
-
 /**
- * Created by dbersenev on 04.04.2016.
+ * Created by dbersenev on 19.04.2016.
  */
-public class TransactionCommittedException extends TransactionException {
-
-}
+package org.molasdin.wbase.transaction;
