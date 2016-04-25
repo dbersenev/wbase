@@ -66,7 +66,7 @@ try(UserTransaction<JdbcEngine> tx = tm.createTransaction()) {
 ```Java
 TransactionManager<JdbcEngine> tm = new JdbcTransactionManager(new DataSourceConnectionSource(dataSource));
 try(UserTransaction<JdbcEngine> tx = tm.createTransaction()) {
-   //here we force new transaction even thoug inner is eglible to have propagated transaction
+   //here we force new transaction even though inner is eglible to have propagated transaction
    tx.context().modifyDescriptor(TransactionDescriptors.ALWAYS_NEW);
    try(UserTransaction<JdbcEngine> tx2 = tm.createTransaction()) {
    }
