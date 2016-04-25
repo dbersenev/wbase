@@ -48,7 +48,7 @@ public class TestInnerTransactions {
     @Test
     public void testNew(){
         try (UserTransaction<SimpleEngine> tx = txm.createTransaction()) {
-            try (UserTransaction<SimpleEngine> inner = txm.createTransaction(TransactionDescriptors.INSTANCE.alwaysNew())) {
+            try (UserTransaction<SimpleEngine> inner = txm.createTransaction(TransactionDescriptors.ALWAYS_NEW)) {
                 Assert.assertNotEquals(tx.engine(), inner.engine());
                 inner.commit();
             }
@@ -60,7 +60,7 @@ public class TestInnerTransactions {
     public void testIfResourceRestored(){
         try (UserTransaction<SimpleEngine> tx = txm.createTransaction()) {
             TestResource res = tx.engine().resource();
-            try (UserTransaction<SimpleEngine> inner = txm.createTransaction(TransactionDescriptors.INSTANCE.alwaysNew())) {
+            try (UserTransaction<SimpleEngine> inner = txm.createTransaction(TransactionDescriptors.ALWAYS_NEW)) {
                 Assert.assertNotEquals(tx.engine(), inner.engine());
                 inner.commit();
             }
@@ -85,7 +85,7 @@ public class TestInnerTransactions {
     @Test
     public void checkIfLinkedRolledBackOuter(){
         try (UserTransaction<SimpleEngine> tx = txm.createTransaction()) {
-            try (UserTransaction<SimpleEngine> inner = txm.createTransaction(TransactionDescriptors.INSTANCE.alwaysNewLinked())) {
+            try (UserTransaction<SimpleEngine> inner = txm.createTransaction(TransactionDescriptors.ALWAYS_NEW_LINKED)) {
                 inner.rollback();
             }
             Assert.assertTrue(tx.wasRolledBack());
@@ -120,10 +120,10 @@ public class TestInnerTransactions {
     @Test
     public void checkDescriptor(){
         TransactionManager<SimpleEngine> txm2 = new SimpleTransactionManager("KEY");
-        TransactionDescriptor descr = TransactionDescriptors.INSTANCE.propagatedOrNew();
+        TransactionDescriptor descr = TransactionDescriptors.NEW_OR_PROPAGATED;
         try (UserTransaction<SimpleEngine> tx = txm.createTransaction(descr)) {
-            tx.context().modifyDescriptor(TransactionDescriptors.INSTANCE.alwaysNew());
-            try (UserTransaction<SimpleEngine> inner = txm2.createTransaction(TransactionDescriptors.INSTANCE.propagatedOnly())) {
+            tx.context().modifyDescriptor(TransactionDescriptors.ALWAYS_NEW);
+            try (UserTransaction<SimpleEngine> inner = txm2.createTransaction(TransactionDescriptors.PROPAGATED_ONLY)) {
                 inner.rollback();
                 Assert.assertTrue(inner.wasRolledBack());
             }
@@ -137,8 +137,8 @@ public class TestInnerTransactions {
     public void checkRequiredPropagation(){
         TransactionManager<SimpleEngine> txm2 = new SimpleTransactionManager("KEY");
         try (UserTransaction<SimpleEngine> tx = txm.createTransaction()) {
-            tx.context().modifyDescriptor(TransactionDescriptors.INSTANCE.propagatedOnly());
-            try (UserTransaction<SimpleEngine> inner = txm2.createTransaction(TransactionDescriptors.INSTANCE.alwaysNew())) {
+            tx.context().modifyDescriptor(TransactionDescriptors.PROPAGATED_ONLY);
+            try (UserTransaction<SimpleEngine> inner = txm2.createTransaction(TransactionDescriptors.ALWAYS_NEW)) {
                 inner.commit();
                 Assert.assertTrue(inner.wasCommitted());
             }
@@ -150,7 +150,7 @@ public class TestInnerTransactions {
 
     @Test(expected = TransactionPropagationRequiredException.class)
     public void checkPropagationError(){
-        try (UserTransaction<SimpleEngine> tx = txm.createTransaction(TransactionDescriptors.INSTANCE.propagatedOnly())) {
+        try (UserTransaction<SimpleEngine> tx = txm.createTransaction(TransactionDescriptors.PROPAGATED_ONLY)) {
             tx.commit();
         }
     }

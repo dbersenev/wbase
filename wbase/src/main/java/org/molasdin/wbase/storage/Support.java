@@ -46,13 +46,13 @@ public interface Support<T extends Engine> {
         return runner;
     }
     default TransactionRunner<T> newRunnerWithIsolation(TransactionIsolation isolation) {
-        return newRunner(defaultTransactionProvider(), TransactionDescriptors.INSTANCE.isolated(isolation));
+        return newRunner(defaultTransactionProvider(), TransactionDescriptors.isolated(isolation));
     }
     default TransactionRunner<T> newRunner(TransactionManager<T> provider) {
         return newRunner(provider, defaultDescriptor());
     }
     default TransactionRunner<T> newRunnerWithIsolation(TransactionManager<T> provider, TransactionIsolation isolation) {
-        return newRunner(provider, TransactionDescriptors.INSTANCE.isolated(isolation));
+        return newRunner(provider, TransactionDescriptors.isolated(isolation));
     }
     default TransactionRunner<T> newRunner(TransactionManager<T> provider, TransactionDescriptor isolation) {
         TransactionRunner<T> r = new BasicTransactionRunner<T>(provider);
@@ -87,7 +87,7 @@ public interface Support<T extends Engine> {
         return newTransaction(defaultTransactionProvider(), defaultDescriptor());
     }
     default UserTransaction<T> newTransactionWithIsolation(TransactionIsolation isolation) {
-        return newTransaction(defaultTransactionProvider(), TransactionDescriptors.INSTANCE.isolated(isolation));
+        return newTransaction(defaultTransactionProvider(), TransactionDescriptors.isolated(isolation));
     }
     default UserTransaction<T> newTransaction(TransactionDescriptor descriptor){
         TransactionManager<T> provider = defaultTransactionProvider();
@@ -100,7 +100,7 @@ public interface Support<T extends Engine> {
         return newTransaction(provider, defaultDescriptor());
     }
     default UserTransaction<T> newTransactionWithIsolation(TransactionManager<T> provider, TransactionIsolation isolation) {
-        return newTransaction(provider, TransactionDescriptors.INSTANCE.isolated(isolation));
+        return newTransaction(provider, TransactionDescriptors.isolated(isolation));
     }
     default UserTransaction<T> newTransaction(TransactionManager<T> provider, TransactionDescriptor descriptor) {
         if(descriptor != null){

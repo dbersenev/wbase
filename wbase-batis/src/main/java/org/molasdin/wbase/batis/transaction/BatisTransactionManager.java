@@ -26,6 +26,7 @@ import org.molasdin.wbase.batis.support.BatisMapperEngine;
 import org.molasdin.wbase.transaction.*;
 import org.molasdin.wbase.transaction.context.config.UserTransactionConfiguration;
 import org.molasdin.wbase.transaction.jdbc.proxy.ConnectionDelegate;
+import org.molasdin.wbase.transaction.jdbc.proxy.ProtectedConnection;
 import org.molasdin.wbase.transaction.manager.AbstractTransactionManager;
 import org.molasdin.wbase.transaction.profiles.ProfilesManager;
 import org.molasdin.wbase.transaction.profiles.TransactionProfile;
@@ -78,7 +79,7 @@ public class BatisTransactionManager extends AbstractTransactionManager<BatisMap
             cfg.attachProxyFunction(sessionFactory, SqlSession.class, SqlSessionProxy::new);
             if(connectionSource != null) {
                 cfg.bindResource(connectionSource.key(), session.getConnection());
-                cfg.attachProxyFunction(connectionSource.key(), Connection.class, ConnectionDelegate::new);
+                cfg.attachProxyFunction(connectionSource.key(), Connection.class, ProtectedConnection::new);
             }
             hasSavePoint = false;
         }

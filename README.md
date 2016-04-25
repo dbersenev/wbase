@@ -27,3 +27,63 @@ WBase is the Java library of reusable components and integration with JSF/Spring
    and synchronization between multiple transaction managers with clear API and explicit semantics.
 4. It will be possible to synchronize my transactions with Spring ones.
 
+##Samples
+
+**Transactions (wbase)**
+
+```Java
+TransactionManager<JdbcEngine> tm = new JdbcTransactionManager(new DataSourceConnectionSource(dataSource));
+try(UserTransaction<JdbcEngine> tx = tm.createTransaction()){ //try with resources
+   JdbcEngine e = tx.engine();
+   Long someResult = e.extended(mySQLQuery).longResult();
+   tx.commit(); //if commit or rollback is omitted Tx will be rolled back on close
+}
+```
+
+```Java
+TransactionManager<JdbcEngine> tm = new JdbcTransactionManager(new DataSourceConnectionSource(dataSource));
+try(UserTransaction<JdbcEngine> tx = tm.createTransaction()) {
+   //this one is going to reuse outer transaction (proxy)
+   //Default transaction requirement is "NEW_OR_PROPAGATED"
+   try(UserTransaction<JdbcEngine> tx2 = tm.createTransaction()) {
+      //only rollback is possible for this transaction
+      //it is going to trigger rollback for the parent one
+   }
+   tx.commit(); //commit both transactions since they are mapped to the same one
+}
+```
+
+```Java
+TransactionManager<JdbcEngine> tm = new JdbcTransactionManager(new DataSourceConnectionSource(dataSource));
+try(UserTransaction<JdbcEngine> tx = tm.createTransaction()) {
+   //here we have independent transaction
+   try(UserTransaction<JdbcEngine> tx2 = tm.createTransaction(TransactionDescriptors.ALWAYS_NEW)) {
+   }
+   tx.commit(); //commit only first one
+}
+```
+
+```Java
+TransactionManager<JdbcEngine> tm = new JdbcTransactionManager(new DataSourceConnectionSource(dataSource));
+try(UserTransaction<JdbcEngine> tx = tm.createTransaction()) {
+   //here we force new transaction even thoug inner is eglible to have propagated transaction
+   tx.context().modifyDescriptor(TransactionDescriptors.ALWAYS_NEW);
+   try(UserTransaction<JdbcEngine> tx2 = tm.createTransaction()) {
+   }
+   tx.context().restoreDescriptor(); //restore/remove descriptor modifications
+}
+```
+
+```Java
+Source<Connection> source = new new DataSourceConnectionSource(dataSource);
+TransactionManager<JdbcEngine> tm = new JdbcTransactionManager(source);
+try(UserTransaction<JdbcEngine> tx = tm.createTransaction()) {
+   //even though we create new manager here, inner transaction will be mapped to the same physical one
+   //as the outer transaction
+   //it happens because we synchronize on the same source and requirement is "NEW_OR_PROPAGATED"
+   TransactionManager<JdbcEngine> tm2 = new JdbcTransactionManager(source);
+   try(UserTransaction<JdbcEngine> tx2 = tm2.createTransaction()) {
+     tx2.commit();// so commit here is doing nothing. Only rollback can be called
+   }
+}
+```

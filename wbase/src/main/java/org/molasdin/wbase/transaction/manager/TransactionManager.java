@@ -26,10 +26,10 @@ import org.molasdin.wbase.transaction.TransactionIsolation;
  */
 public interface TransactionManager<T extends Engine> {
     default UserTransaction<T> createTransaction() {
-        return createTransaction(TransactionDescriptors.INSTANCE.simple());
+        return createTransaction(TransactionDescriptors.SIMPLE);
     }
     default UserTransaction<T> createTransaction(TransactionIsolation isolation) {
-        return createTransaction(TransactionDescriptors.INSTANCE.isolated(isolation));
+        return createTransaction(TransactionDescriptors.isolated(isolation));
     }
     UserTransaction<T> createTransaction(TransactionDescriptor descriptor);
 }

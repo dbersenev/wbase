@@ -43,7 +43,7 @@ public abstract class DelegatingBiDirectionalBatchCursor<T, F extends Engine> ex
     }
 
     protected TransactionDescriptor descriptor() {
-        return TransactionDescriptors.INSTANCE.simple();
+        return TransactionDescriptors.SIMPLE;
     }
 
     @Override

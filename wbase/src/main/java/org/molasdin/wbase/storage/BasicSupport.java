@@ -26,7 +26,7 @@ import org.molasdin.wbase.transaction.manager.TransactionManager;
  */
 public class BasicSupport<T extends Engine> implements Support<T> {
     private TransactionManager<T> provider;
-    private TransactionDescriptor descriptor = TransactionDescriptors.INSTANCE.simple();
+    private TransactionDescriptor descriptor = TransactionDescriptors.SIMPLE;
 
     @Override
     public void setDefaultDescriptor(TransactionDescriptor descriptor) {

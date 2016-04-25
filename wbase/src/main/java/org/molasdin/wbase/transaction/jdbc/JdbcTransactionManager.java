@@ -20,6 +20,7 @@ import org.molasdin.wbase.Source;
 import org.molasdin.wbase.transaction.*;
 import org.molasdin.wbase.transaction.context.config.UserTransactionConfiguration;
 import org.molasdin.wbase.transaction.jdbc.proxy.ConnectionDelegate;
+import org.molasdin.wbase.transaction.jdbc.proxy.ProtectedConnection;
 import org.molasdin.wbase.transaction.manager.AbstractTransactionManager;
 
 import java.sql.Connection;
@@ -46,7 +47,7 @@ public class JdbcTransactionManager extends AbstractTransactionManager<JdbcEngin
             throwIfPropagationRequired(cfg.descriptor());
             cfg.bindResource(key, connectionSource.value(), Connection::close);
             isSavePoint = false;
-            cfg.attachProxyFunction(key, Connection.class, ConnectionDelegate::new);
+            cfg.attachProxyFunction(key, Connection.class, ProtectedConnection::new);
         } else {
             cfg.setSyncOnResource(key);
         }

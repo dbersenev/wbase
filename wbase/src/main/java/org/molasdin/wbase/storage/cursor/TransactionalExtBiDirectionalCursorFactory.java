@@ -28,7 +28,7 @@ public abstract class TransactionalExtBiDirectionalCursorFactory<T, F extends En
 
 
     private TransactionManager<F> pm;
-    private TransactionDescriptor desc = TransactionDescriptors.INSTANCE.simple();
+    private TransactionDescriptor desc = TransactionDescriptors.SIMPLE;
 
     public TransactionalExtBiDirectionalCursorFactory(TransactionManager<F> pm, TransactionDescriptor desc) {
         this.pm = pm;

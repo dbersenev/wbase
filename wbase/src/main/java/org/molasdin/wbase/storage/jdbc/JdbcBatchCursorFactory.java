@@ -38,7 +38,7 @@ public class JdbcBatchCursorFactory<T> implements BatchCursorFactory<T> {
 
 
     private TransactionManager<JdbcEngine> txm;
-    private TransactionDescriptor descriptor = TransactionDescriptors.INSTANCE.simple();
+    private TransactionDescriptor descriptor = TransactionDescriptors.SIMPLE;
     private String query;
     private String countQuery;
     private List<Object> args = new ArrayList<>();
