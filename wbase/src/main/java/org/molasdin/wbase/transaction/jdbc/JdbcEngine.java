@@ -16,26 +16,21 @@
 
 package org.molasdin.wbase.transaction.jdbc;
 
-import org.apache.commons.dbutils.ProxyFactory;
+import org.molasdin.wbase.transaction.jdbc.proxy.TrackingConnection;
 import org.molasdin.wbase.transaction.manager.Engine;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.sql.*;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Created by dbersenev on 15.10.2014.
  */
-public class JdbcEngine implements InvocationHandler, Engine, AutoCloseable{
+public class JdbcEngine implements Engine, AutoCloseable{
     private Connection connection;
-    private Connection proxy;
-    private List<Statement> statements = new LinkedList<Statement>();
+    private TrackingConnection proxy;
 
     public JdbcEngine(Connection connection) {
         this.connection = connection;
-        proxy = ProxyFactory.instance().createConnection(this);
+        proxy = new TrackingConnection(connection);
     }
 
     public Connection connection(){
@@ -83,32 +78,8 @@ public class JdbcEngine implements InvocationHandler, Engine, AutoCloseable{
         }
     }
 
-    private void closeDependencies() throws Exception{
-        for(Statement entry: statements){
-            if(entry.isClosed()){
-                entry.close();
-            }
-        }
-        statements.clear();
-    }
-
     public void close() {
-        if(statements.isEmpty()){
-            return;
-        }
-        try{
-            closeDependencies();
-        } catch (Exception ex){
-            throw new RuntimeException(ex);
-        }
+        proxy.closeStatements();
     }
 
-    @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        Object result = method.invoke(proxy, args);
-        if(method.getName().equals("prepareStatement") || method.getName().equals("createStatement")){
-            statements.add((Statement) result);
-        }
-        return result;
-    }
 }

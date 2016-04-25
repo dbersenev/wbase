@@ -21,7 +21,7 @@ package org.molasdin.wbase.transaction;
  */
 public class BasicTransactionDescriptor implements TransactionDescriptor{
     private TransactionIsolation isolation;
-    private Requirement requirement = Requirement.PROPAGATED_ONLY;
+    private Requirement requirement = Requirement.NEW_OR_PROPAGATED;
 
     public BasicTransactionDescriptor() {
     }

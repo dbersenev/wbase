@@ -45,7 +45,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <scalaVersion>2.11.7</scalaVersion>
+                    <scalaVersion>2.12.0-M4</scalaVersion>
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>

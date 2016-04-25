@@ -16,6 +16,8 @@
 
 package org.molasdin.wbase.storage;
 
+import org.molasdin.wbase.transaction.TransactionDescriptor;
+import org.molasdin.wbase.transaction.TransactionDescriptors;
 import org.molasdin.wbase.transaction.manager.Engine;
 import org.molasdin.wbase.transaction.manager.TransactionManager;
 
@@ -24,6 +26,17 @@ import org.molasdin.wbase.transaction.manager.TransactionManager;
  */
 public class BasicSupport<T extends Engine> implements Support<T> {
     private TransactionManager<T> provider;
+    private TransactionDescriptor descriptor = TransactionDescriptors.INSTANCE.simple();
+
+    @Override
+    public void setDefaultDescriptor(TransactionDescriptor descriptor) {
+        this.descriptor = descriptor;
+    }
+
+    @Override
+    public TransactionDescriptor defaultDescriptor() {
+        return descriptor;
+    }
 
     public void setDefaultTransactionProvider(TransactionManager<T> provider) {
         this.provider = provider;

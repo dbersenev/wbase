@@ -26,6 +26,7 @@ import org.molasdin.wbase.transaction.UserTransaction;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by dbersenev on 13.03.14.
@@ -46,24 +47,17 @@ public class BatisRepository<T, M extends CommonMapper<T>, K extends Serializabl
     }
 
     @Override
-    public T byId(final K id) {
-        try(UserTransaction<BatisMapperEngine> tx = newTransaction()){
+    public Optional<T> byId(final K id) {
+        try(UserTransaction<BatisMapperEngine> tx = support().newTransaction()){
             T r = tx.engine().mapper(mapperClass).findById(id);
             tx.commit();
-            return r;
+            return Optional.ofNullable(r);
         }
-    }
-
-    protected TransactionDescriptor defaultCursorTransactionCfg() {
-        return null;
-    }
-    protected UserTransaction<BatisMapperEngine> newTransaction(){
-        return support.newTransaction(defaultCursorTransactionCfg());
     }
 
     @Override
     public void save(final T o) {
-        try(UserTransaction<BatisMapperEngine> tx = newTransaction()){
+        try(UserTransaction<BatisMapperEngine> tx = support().newTransaction()){
             tx.engine().mapper(mapperClass).save(o);
             tx.commit();
         }
@@ -71,7 +65,7 @@ public class BatisRepository<T, M extends CommonMapper<T>, K extends Serializabl
 
     @Override
     public void update(final T o) {
-        try(UserTransaction<BatisMapperEngine> tx = newTransaction()){
+        try(UserTransaction<BatisMapperEngine> tx = support().newTransaction()){
             tx.engine().mapper(mapperClass).update(o);
             tx.commit();
         }
@@ -79,7 +73,7 @@ public class BatisRepository<T, M extends CommonMapper<T>, K extends Serializabl
 
     @Override
     public void remove(final T o) {
-        try(UserTransaction<BatisMapperEngine> tx = newTransaction()){
+        try(UserTransaction<BatisMapperEngine> tx = support().newTransaction()){
             tx.engine().mapper(mapperClass).remove(o);
             tx.commit();
         }

@@ -33,6 +33,7 @@ public interface ExtendedConfiguration extends TransactionConfiguration{
     Set<Object> freshResources();
     boolean changed();
     Object underline();
+    Object syncOnResource();
 
     @Override
     ExtendedInterception interception();

@@ -31,11 +31,4 @@
     <name>wbase</name>
     <description>Collection of reusable components</description>
 
-    <dependencies>
-        <dependency>
-            <groupId>commons-dbutils</groupId>
-            <artifactId>commons-dbutils</artifactId>
-            <version>1.6</version>
-        </dependency>
-    </dependencies>
 </project>

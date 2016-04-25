@@ -29,7 +29,7 @@ import org.molasdin.wbase.transaction.manager.SimpleTransactionManager;
  * Created by dbersenev on 19.04.2016.
  */
 public class TestSimpleTransactions {
-    private SimpleTransactionManager txm = new SimpleTransactionManager();
+    private SimpleTransactionManager txm = new SimpleTransactionManager("KEY");
 
     @Test
     public void testRollback() {

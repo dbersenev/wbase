@@ -19,6 +19,7 @@ package org.molasdin.wbase.transaction.jdbc;
 import org.molasdin.wbase.Source;
 import org.molasdin.wbase.transaction.*;
 import org.molasdin.wbase.transaction.context.config.UserTransactionConfiguration;
+import org.molasdin.wbase.transaction.jdbc.proxy.ConnectionDelegate;
 import org.molasdin.wbase.transaction.manager.AbstractTransactionManager;
 
 import java.sql.Connection;
@@ -38,12 +39,20 @@ public class JdbcTransactionManager extends AbstractTransactionManager<JdbcEngin
     @Override
     protected void configure(UserTransactionConfiguration<JdbcEngine> cfg) throws Exception {
         boolean isSavePoint = cfg.descriptor().requirement().equals(Requirement.NESTED);
-        if (!cfg.hasResource(connectionSource.key()) || cfg.descriptor().requirement().hasNewSemantics()) {
+
+        Object key = connectionSource.key();
+
+        if (!cfg.hasResource(key) || cfg.descriptor().requirement().hasNewSemantics()) {
             throwIfPropagationRequired(cfg.descriptor());
-            cfg.bindResource(connectionSource.key(), connectionSource.value(), Connection::close);
+            cfg.bindResource(key, connectionSource.value(), Connection::close);
             isSavePoint = false;
+            cfg.attachProxyFunction(key, Connection.class, ConnectionDelegate::new);
+        } else {
+            cfg.setSyncOnResource(key);
         }
-        Connection connection = cfg.resource(connectionSource.key());
+
+        Connection connection = cfg.resource(key);
+
         int isolation = connection.getTransactionIsolation();
         if (cfg.descriptor().isolation() != null && !isSavePoint) {
             connection.setTransactionIsolation(cfg.descriptor().isolation().jdbcCode());
@@ -60,5 +69,6 @@ public class JdbcTransactionManager extends AbstractTransactionManager<JdbcEngin
         }
         tx.setIsolation(isolation);
         cfg.setUnderline(engine, tx);
+        cfg.interception().addPreClose((e) -> engine.close());
     }
 }

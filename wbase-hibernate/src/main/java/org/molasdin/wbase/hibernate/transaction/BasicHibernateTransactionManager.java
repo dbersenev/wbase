@@ -40,6 +40,8 @@ public class BasicHibernateTransactionManager extends AbstractTransactionManager
         if(cfg.descriptor().requirement().hasNewSemantics() || !cfg.hasResource(sessionFactory)) {
             Session s = sessionFactory.openSession();
             cfg.bindResource(sessionFactory, s, Session::close);
+        } else {
+            cfg.setSyncOnResource(sessionFactory);
         }
         session = cfg.resource(sessionFactory);
         HibernateTransaction tx = new HibernateTransaction(session, cfg.descriptor().isolation().jdbcCode());

@@ -40,6 +40,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 
 public class BasicHibernateRepository<T, K extends Serializable> implements HibernateRepository<T, K> {
@@ -64,36 +65,32 @@ public class BasicHibernateRepository<T, K extends Serializable> implements Hibe
         return clazz;
     }
 
-    protected TransactionDescriptor defaultDescriptor(){
-        return TransactionDescriptors.INSTANCE.simple();
-    }
-
     public ExtBiDirectionalCursorFactory<T> all() {
         return new HibernateCursorFactory<>(support().defaultTransactionProvider(),
-                defaultDescriptor(), Search.all(clazz)
+                support().defaultDescriptor(), Search.all(clazz)
                 );
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public T byId(final K id) {
-        try(UserTransaction<HibernateEngine> tx = support().defaultTransactionProvider().createTransaction(defaultDescriptor())) {
+    public Optional<T> byId(final K id) {
+        try(UserTransaction<HibernateEngine> tx = support().newTransaction()) {
             Session session = tx.engine().session();
             T r =  (T)session.createCriteria(clazz).add(Restrictions.idEq(id)).uniqueResult();
             tx.commit();
-            return r;
+            return Optional.ofNullable(r);
         }
     }
 
     @Override
     public <U> ExtBiDirectionalCursorFactory<U> filteredCollection(T owner, Collection<U> collection) {
-        return new FilteredHibernateCursorFactory<U>(support().defaultTransactionProvider(),collection, owner);
+        return new FilteredHibernateCursorFactory<>(support().defaultTransactionProvider(),collection, owner);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <U> List<U> simpleFilteredCollection(final T owner, final Collection<U> collection, final String filter) {
-        try (UserTransaction<HibernateEngine> tx = support().defaultTransactionProvider().createTransaction(defaultDescriptor())){
+        try (UserTransaction<HibernateEngine> tx = support().newTransaction()){
             Session session = tx.engine().session();
             attachRaw(owner, session);
             List<U> r = (List<U>) session.createFilter(collection, filter).list();
@@ -104,7 +101,7 @@ public class BasicHibernateRepository<T, K extends Serializable> implements Hibe
 
     @Override
     public List<T> byQuery(final String query, final Map<String, ?> arguments) {
-        try(UserTransaction<HibernateEngine> tx = support().defaultTransactionProvider().createTransaction(defaultDescriptor())){
+        try(UserTransaction<HibernateEngine> tx = support().newTransaction()){
             List<T> r = tx.engine().queryForList(query, arguments, clazz);
             tx.commit();
             return r;
@@ -128,10 +125,9 @@ public class BasicHibernateRepository<T, K extends Serializable> implements Hibe
 
     @Override
     public void attach(final T o) {
-        support().runWithIsolation((Transactional<HibernateEngine, Void>) tx -> {
+        support().executeWithIsolation(tx -> {
             Session session = tx.engine().session();
             attachRaw(o, session);
-            return null;
         }, TransactionIsolation.READ_UNCOMMITTED);
     }
 
@@ -144,58 +140,41 @@ public class BasicHibernateRepository<T, K extends Serializable> implements Hibe
 
     @Override
     public void refreshChild(final T o, final Object child){
-        support().run((Transactional<HibernateEngine, Void>) tx -> {
+        support().execute(tx -> {
             attachRaw(o, tx.engine().session());
             Hibernate.initialize(child);
-            return null;
         });
     }
 
     @Override
     public void save(final T o) {
-        support().run((Transactional<HibernateEngine, Void>) tx -> {
-            tx.engine().session().save(o);
-            return null;
-        });
+        support().execute(tx -> tx.engine().session().save(o));
     }
 
     public void merge(final T o) {
-        support().run((Transactional<HibernateEngine, Void>) tx -> {
-            tx.engine().session().merge(o);
-            return null;
-        });
+        support().execute(tx -> tx.engine().session().merge(o));
     }
 
     @Override
     public void remove(final T o) {
-        support().run((Transactional<HibernateEngine, Void>) tx -> {
-            tx.engine().session().delete(o);
-            return null;
-        });
+        support().execute(tx -> tx.engine().session().delete(o));
     }
 
     @Override
     public void update(final T o) {
-        support().run((Transactional<HibernateEngine, Void>) tx -> {
-            tx.engine().session().update(o);
-            return null;
-        });
+        support().execute(tx -> tx.engine().session().update(o));
     }
 
     public void saveOrUpdate(final T o) {
-        support().run((Transactional<HibernateEngine, Void>) tx -> {
-            tx.engine().session().saveOrUpdate(o);
-            return null;
-        });
+        support().execute(tx -> tx.engine().session().saveOrUpdate(o));
     }
 
     @Override
     public void refresh(final T o) {
-        support().run((Transactional<HibernateEngine, Void>) tx -> {
+        support().execute(tx -> {
             Session session = tx.engine().session();
             attachRaw(o, session);
             session.refresh(o);
-            return null;
         });
     }
 }

@@ -16,18 +16,17 @@
 
 package org.molasdin.wbase.transaction.context.config;
 
-import org.apache.commons.collections4.Closure;
-import org.apache.commons.lang3.tuple.Pair;
 import org.molasdin.wbase.transaction.Transaction;
 import org.molasdin.wbase.transaction.TransactionDescriptor;
-import org.molasdin.wbase.transaction.UserTransaction;
 import org.molasdin.wbase.transaction.context.BasicTransactionResource;
 import org.molasdin.wbase.transaction.context.ResourceClosure;
+import org.molasdin.wbase.transaction.context.TransactionProxyResource;
 import org.molasdin.wbase.transaction.context.TransactionResource;
 import org.molasdin.wbase.transaction.context.interceptors.ExtendedInterception;
 import org.molasdin.wbase.transaction.context.interceptors.InterceptionMode;
 
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * Created by dbersenev on 12.04.2016.
@@ -35,13 +34,16 @@ import java.util.*;
 public class BasicTransactionConfiguration implements ExtendedConfiguration {
     private Map<Object, TransactionResource<?>> localResources = new HashMap<>();
     private Set<Object> newResources = new HashSet<>();
+    private Map<Object, TransactionResource<?>> resourceProxies = new HashMap<>();
     private TransactionDescriptor descriptor;
     private boolean hasTx;
     private Object key;
     private Transaction underline = null;
+    private Object syncOnResource = null;
+    private boolean txCreated = false;
 
     private Map<InterceptionMode, ExtendedInterception> interceptions = new EnumMap<>(InterceptionMode.class);
-    private InterceptionMode currentInterceptionMode = InterceptionMode.DESCENDANTS;
+    private InterceptionMode currentInterceptionMode = InterceptionMode.CURRENT;
 
     private ConfigurationCallback listener;
 
@@ -56,6 +58,19 @@ public class BasicTransactionConfiguration implements ExtendedConfiguration {
         this.descriptor = descriptor;
         this.hasTx = hasTx;
         this.listener = listener;
+    }
+
+    @Override
+    public Object syncOnResource() {
+        return syncOnResource;
+    }
+
+    @Override
+    public void setSyncOnResource(Object key) {
+        if(!localResources.containsKey(key)) {
+            throw new RuntimeException(String.format("No resource with such key: %s", key.toString()));
+        }
+        this.syncOnResource = key;
     }
 
     @Override
@@ -111,7 +126,7 @@ public class BasicTransactionConfiguration implements ExtendedConfiguration {
     }
 
     private <U> void bindResource(Object key, U resource, ResourceClosure<U> onClose, boolean stable) {
-        if(!localResources.containsKey(key) && !resource.equals(localResources.get(key))) {
+        if(!localResources.containsKey(key) || !resource.equals(localResources.get(key))) {
             localResources.put(key, new BasicTransactionResource<>(resource, stable, onClose));
             newResources.add(key);
         }
@@ -120,6 +135,17 @@ public class BasicTransactionConfiguration implements ExtendedConfiguration {
     @Override
     public Set<Object> freshResources() {
         return newResources;
+    }
+
+    @Override
+    public <U> void attachProxyFunction(Object key, Class<U> resourceClass, Function<U, U> proxyMaker) {
+        if(!localResources.containsKey(key) || !resourceClass.isInstance(localResources.get(key).resource())) {
+            throw new RuntimeException("There is no resource to add proxy for.");
+        }
+
+        @SuppressWarnings("unchecked")
+        TransactionResource<U> res = (TransactionResource<U>) localResources.get(key);
+        resourceProxies.put(key, new TransactionProxyResource<>(res, proxyMaker));
     }
 
     @Override
@@ -164,6 +190,15 @@ public class BasicTransactionConfiguration implements ExtendedConfiguration {
 
     @Override
     public Transaction createTransaction() {
+        prepare();
         return  listener.configureTransaction(this);
+    }
+
+    protected void prepare(){
+        if(txCreated) {
+            throw new RuntimeException("Transaction was already created");
+        }
+        txCreated = true;
+        localResources.putAll(resourceProxies);
     }
 }

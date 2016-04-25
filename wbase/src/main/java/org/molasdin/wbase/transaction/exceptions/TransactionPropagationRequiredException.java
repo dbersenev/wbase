@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Bersenev Dmitry molasdin@outlook.com
+ * Copyright 2016 Bersenev Dmitry molasdin@outlook.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,10 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.storage;
+package org.molasdin.wbase.transaction.exceptions;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-
-public interface Repository<T, K extends Serializable>{
-    Optional<T> byId(K id);
-    void save(T o);
-    void update(T o);
-    void remove(T o);
+/**
+ * Created by dbersenev on 21.03.2016.
+ */
+public class TransactionPropagationRequiredException extends TransactionException  {
 }

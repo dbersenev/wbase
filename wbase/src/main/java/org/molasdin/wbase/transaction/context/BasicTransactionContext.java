@@ -79,7 +79,7 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
     private <F extends ExtendedConfiguration> F prepareConfig(Object key, F cfg, Object... resourcesKeys) {
         for (Object entry : resourcesKeys) {
             if (resources.containsKey(entry)) {
-                cfg.resources().put(entry, resources.get(key));
+                cfg.resources().put(entry, resources.get(entry));
             }
         }
         return cfg;
@@ -156,78 +156,49 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
             ExtendedTransaction currentTemp = currentTransaction;
             tx.interception().addPostRollback((e) -> currentTemp.rollback());
             currentTransaction.interception().addPreRollback((e) -> {
-                if(!tx.wasCommitted() && !tx.wasRolledBack()) {
+                if (!tx.wasCommitted() && !tx.wasRolledBack()) {
                     tx.rollback();
                 }
             });
             currentTransaction.interception().addPreClose(((e) -> tx.close()));
         }
 
-        //resources configuration
-        Map<Object, TransactionResource<?>> resourcesArchive = new HashMap<>();
+        ResourcesCleanupInterceptor resCleanup = new ResourcesCleanupInterceptor(resources);
 
-        //unstable resources will cause closing all of the nested transaction which are using them
-        Set<Object> resourcesToRemove = new HashSet<>();
-        //stable resources will be alive until last transaction removes them
-        Set<Object> resourcesToRemoveStable = new HashSet<>();
+        Object syncOnRes = cfg.syncOnResource();
 
         for (Object entry : cfg.resources().keySet()) {
             if (cfg.freshResources().contains(entry)) {
                 if (resources.containsKey(entry)) {
-                    resourcesArchive.put(entry, resources.get(entry));
+                    resCleanup.archive().put(entry, resources.get(entry));
                 }
                 resources.put(entry, cfg.resources().get(entry));
                 if (!cfg.resources().get(entry).isStable()) {
-                    resourcesToRemove.add(entry);
+                    resCleanup.toRemove().add(entry);
+                }
+            } else {
+                if (entry.equals(syncOnRes)) {
+                    for (ExtendedTransaction cl : resources.get(entry).clients()) {
+                        tx.interception().addPostRollback((e) -> {
+                            cl.rollback();
+                        });
+                    }
                 }
             }
 
             if (resources.get(entry).isStable()) {
-                resourcesToRemoveStable.add(entry);
+                resCleanup.toRemoveStable().add(entry);
             }
 
             resources.get(entry).clients().add(tx);
         }
 
-        Map<Object, TransactionResource<?>> usedResources = cfg.resources();
+        resCleanup.used().putAll(cfg.resources());
 
-        tx.interception().addPreClose((e) -> {
-            //retain only what is left to restore
-            resourcesArchive.keySet().retainAll(resources.keySet());
-            //traverse all resources used by the transaction
-            for (Object entry : usedResources.keySet()) {
-                TransactionResource<?> tr = usedResources.get(entry);
-                //check if resource must be removed by this transaction
-                if (resourcesToRemove.contains(entry)) {
-                    try {
-                        for (ExtendedTransaction t : tr.clients()) {
-                            if (t.equals(e.currentTransaction())) {
-                                resources.remove(entry);
-                            } else {
-                                t.close();
-                            }
-                        }
-                    } finally {
-                        tr.close();
-                    }
-
-                } else {
-                    //check if it is stable resource
-                    if(resourcesToRemoveStable.contains(entry)) {
-                        if (tr.clients().contains(e.currentTransaction()) && tr.clients().size() == 1) {
-                            tr.close();
-                        }
-                    }
-                    //remove current resource client
-                    tr.clients().remove(e.currentTransaction());
-                }
-            }
-            //restore what was archived
-            resources.putAll(resourcesArchive);
-        });
+        tx.interception().addPreClose(resCleanup);
 
         //retrieve transaction identified by the same key
-        ExtendedTransaction archTx = cfg.hasTransaction()?transactions.get(cfg.key()):null;
+        ExtendedTransaction archTx = cfg.hasTransaction() ? transactions.get(cfg.key()) : null;
         transactions.put(cfg.key(), tx);
 
         Object key = cfg.key();

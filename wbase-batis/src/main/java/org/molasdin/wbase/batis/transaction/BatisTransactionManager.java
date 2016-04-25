@@ -25,6 +25,7 @@ import org.molasdin.wbase.batis.support.BasicBatisMapperEngine;
 import org.molasdin.wbase.batis.support.BatisMapperEngine;
 import org.molasdin.wbase.transaction.*;
 import org.molasdin.wbase.transaction.context.config.UserTransactionConfiguration;
+import org.molasdin.wbase.transaction.jdbc.proxy.ConnectionDelegate;
 import org.molasdin.wbase.transaction.manager.AbstractTransactionManager;
 import org.molasdin.wbase.transaction.profiles.ProfilesManager;
 import org.molasdin.wbase.transaction.profiles.TransactionProfile;
@@ -60,19 +61,24 @@ public class BatisTransactionManager extends AbstractTransactionManager<BatisMap
         boolean newRequired = cfg.descriptor().requirement().hasNewSemantics();
         if (!newRequired && cfg.hasResource(sessionFactory)) {
             session = cfg.resource(sessionFactory);
+            cfg.setSyncOnResource(sessionFactory);
         } else if (!newRequired && connectionSource != null && cfg.hasResource(connectionSource.key())) {
             Connection tmp = cfg.resource(connectionSource.key());
+            cfg.setSyncOnResource(connectionSource.key());
             SqlSession s = sessionFactory.openSession(tmp);
-            cfg.bindResource(connectionSource.key(), s, SqlSession::close);
+            cfg.bindResource(sessionFactory, s, SqlSession::close);
             session = cfg.resource(connectionSource.key());
+            cfg.attachProxyFunction(sessionFactory, SqlSession.class, SqlSessionProxy::new);
         } else {
             throwIfPropagationRequired(descriptor);
             TransactionIsolationLevel level = levelToBatisLevel(descriptor.isolation(), sessionFactory.getConfiguration());
             SqlSession s = level != null ? sessionFactory.openSession(level) : sessionFactory.openSession();
             cfg.bindResource(sessionFactory, s, SqlSession::close);
             session = cfg.resource(sessionFactory);
+            cfg.attachProxyFunction(sessionFactory, SqlSession.class, SqlSessionProxy::new);
             if(connectionSource != null) {
                 cfg.bindResource(connectionSource.key(), session.getConnection());
+                cfg.attachProxyFunction(connectionSource.key(), Connection.class, ConnectionDelegate::new);
             }
             hasSavePoint = false;
         }

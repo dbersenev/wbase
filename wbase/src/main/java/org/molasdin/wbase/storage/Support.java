@@ -31,34 +31,12 @@ public interface Support<T extends Engine> {
     void setDefaultTransactionProvider(TransactionManager<T> provider);
     TransactionManager<T> defaultTransactionProvider();
 
-    default  <U> U runWithIsolation(Transactional<T, U> transactional, TransactionIsolation isolation) {
-        return newRunnerWithIsolation(isolation).call(transactional);
-    }
-
-    default  <U> U run(Transactional<T, U> transactional, TransactionDescriptor descriptor){
-        return newRunner(descriptor).call(transactional);
-    }
-
-    default UserTransaction<T> newTransaction() {
-        return newTransaction(defaultTransactionProvider(), null);
-    }
-
-    default UserTransaction<T> newTransactionWithIsolation(TransactionIsolation isolation) {
-        return newTransaction(defaultTransactionProvider(), TransactionDescriptors.INSTANCE.isolated(isolation));
-    }
-
-    default UserTransaction<T> newTransaction(TransactionDescriptor descriptor){
-        TransactionManager<T> provider = defaultTransactionProvider();
-        if (descriptor != null) {
-            return provider.createTransaction(descriptor);
-        }
-        return provider.createTransaction();
-    }
+    void setDefaultDescriptor(TransactionDescriptor descriptor);
+    TransactionDescriptor defaultDescriptor();
 
     default TransactionRunner<T> newRunner() {
-        return newRunner(defaultTransactionProvider(), null);
+        return newRunner(defaultTransactionProvider(), defaultDescriptor());
     }
-
     default TransactionRunner<T> newRunner(TransactionDescriptor descriptor){
         TransactionManager<T> provider = defaultTransactionProvider();
         TransactionRunner<T> runner = new BasicTransactionRunner<T>(provider);
@@ -67,41 +45,15 @@ public interface Support<T extends Engine> {
         }
         return runner;
     }
-
     default TransactionRunner<T> newRunnerWithIsolation(TransactionIsolation isolation) {
         return newRunner(defaultTransactionProvider(), TransactionDescriptors.INSTANCE.isolated(isolation));
     }
-
-    default  <U> U run(Transactional<T, U> transactional) {
-        return newRunner().call(transactional);
-    }
-    default void execute(TransactionalVoid<T> transactional) {
-        newRunner().execute(transactional);
-    }
-
-    default UserTransaction<T> newTransaction(TransactionManager<T> provider) {
-        return newTransaction(provider, null);
-    }
-
-    default UserTransaction<T> newTransactionWithIsolation(TransactionManager<T> provider, TransactionIsolation isolation) {
-        return newTransaction(provider, TransactionDescriptors.INSTANCE.isolated(isolation));
-    }
-
-    default UserTransaction<T> newTransaction(TransactionManager<T> provider, TransactionDescriptor descriptor) {
-        if(descriptor != null){
-            return provider.createTransaction(descriptor);
-        }
-        return provider.createTransaction();
-    }
-
     default TransactionRunner<T> newRunner(TransactionManager<T> provider) {
-        return newRunner(provider, null);
+        return newRunner(provider, defaultDescriptor());
     }
-
     default TransactionRunner<T> newRunnerWithIsolation(TransactionManager<T> provider, TransactionIsolation isolation) {
         return newRunner(provider, TransactionDescriptors.INSTANCE.isolated(isolation));
     }
-
     default TransactionRunner<T> newRunner(TransactionManager<T> provider, TransactionDescriptor isolation) {
         TransactionRunner<T> r = new BasicTransactionRunner<T>(provider);
         if(isolation != null){
@@ -110,15 +62,61 @@ public interface Support<T extends Engine> {
         return r;
     }
 
+
+    default  <U> U runWithIsolation(Transactional<T, U> transactional, TransactionIsolation isolation) {
+        return newRunnerWithIsolation(isolation).call(transactional);
+    }
+    default  <U> U run(Transactional<T, U> transactional, TransactionDescriptor descriptor){
+        return newRunner(descriptor).call(transactional);
+    }
+    default  <U> U run(Transactional<T, U> transactional) {
+        return newRunner().call(transactional);
+    }
     default <U> U run(TransactionManager<T> provider, Transactional<T, U> transactional) {
         return newRunner(provider).call(transactional);
     }
-
     default  <U> U runWithIsolation(TransactionManager<T> provider, TransactionIsolation isolation, Transactional<T, U> transactional) {
         return newRunnerWithIsolation(provider, isolation).call(transactional);
     }
-
     default  <U> U run(TransactionManager<T> provider, Transactional<T, U> transactional, TransactionDescriptor descriptor) {
         return newRunner(provider, descriptor).call(transactional);
+    }
+
+
+    default UserTransaction<T> newTransaction() {
+        return newTransaction(defaultTransactionProvider(), defaultDescriptor());
+    }
+    default UserTransaction<T> newTransactionWithIsolation(TransactionIsolation isolation) {
+        return newTransaction(defaultTransactionProvider(), TransactionDescriptors.INSTANCE.isolated(isolation));
+    }
+    default UserTransaction<T> newTransaction(TransactionDescriptor descriptor){
+        TransactionManager<T> provider = defaultTransactionProvider();
+        if (descriptor != null) {
+            return provider.createTransaction(descriptor);
+        }
+        return provider.createTransaction();
+    }
+    default UserTransaction<T> newTransaction(TransactionManager<T> provider) {
+        return newTransaction(provider, defaultDescriptor());
+    }
+    default UserTransaction<T> newTransactionWithIsolation(TransactionManager<T> provider, TransactionIsolation isolation) {
+        return newTransaction(provider, TransactionDescriptors.INSTANCE.isolated(isolation));
+    }
+    default UserTransaction<T> newTransaction(TransactionManager<T> provider, TransactionDescriptor descriptor) {
+        if(descriptor != null){
+            return provider.createTransaction(descriptor);
+        }
+        return provider.createTransaction();
+    }
+
+
+    default void execute(TransactionalVoid<T> transactional) {
+        newRunner().execute(transactional);
+    }
+    default void executeWithIsolation(TransactionalVoid<T> transactional, TransactionIsolation isolation) {
+        newRunnerWithIsolation(isolation).execute(transactional);
+    }
+    default void execute(TransactionalVoid<T> transactional, TransactionDescriptor descriptor) {
+        newRunner(descriptor).execute(transactional);
     }
 }

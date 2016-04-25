@@ -14,17 +14,35 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.transaction.context;
+package org.molasdin.wbase.transaction;
 
 import org.molasdin.wbase.Resource;
 
-import java.util.Set;
-
 /**
- * Created by dbersenev on 14.04.2016.
+ * Created by dbersenev on 21.04.2016.
  */
-public interface TransactionResource<T> extends Resource<T>{
-    T resource();
-    Set<ExtendedTransaction> clients();
-    boolean isStable();
+public class AttachedResource<T extends AutoCloseable> implements Resource<T> {
+    private T res;
+    private Transaction tx;
+
+    public AttachedResource(T res, Transaction tx) {
+        this.res = res;
+        this.tx = tx;
+    }
+
+    @Override
+    public T resource() {
+        return res;
+    }
+
+    @Override
+    public void close() {
+        try {
+            res.close();
+        }catch (Exception ex) {
+            throw new RuntimeException(ex);
+        } finally {
+            tx.close();
+        }
+    }
 }

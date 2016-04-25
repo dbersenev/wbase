@@ -18,15 +18,7 @@ package org.molasdin.wbase.transaction.context.config;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.molasdin.wbase.transaction.*;
-import org.molasdin.wbase.transaction.context.config.*;
-import org.molasdin.wbase.transaction.context.interceptors.ExtendedInterception;
-import org.molasdin.wbase.transaction.context.interceptors.InterceptionMode;
-import org.molasdin.wbase.transaction.context.interceptors.TerminatableTransactionEvent;
-import org.molasdin.wbase.transaction.context.interceptors.TransactionEvent;
 import org.molasdin.wbase.transaction.manager.Engine;
-
-import java.util.*;
-import java.util.function.Consumer;
 
 /**
  * Created by dbersenev on 29.03.2016.
@@ -56,6 +48,7 @@ public class BasicUserTransactionConfiguration<T extends Engine> extends BasicTr
 
     @Override
     public UserTransaction<T> createTransaction() {
+        prepare();
         return  listener.configureUserTransaction(this);
     }
 }

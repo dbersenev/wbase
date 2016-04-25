@@ -20,16 +20,18 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.molasdin.wbase.transaction.context.ExtendedUserTransaction;
 import org.molasdin.wbase.transaction.context.GlobalContextHolder;
+import org.molasdin.wbase.transaction.exceptions.TransactionPropagationRequiredException;
 import org.molasdin.wbase.transaction.manager.SimpleEngine;
 import org.molasdin.wbase.transaction.manager.SimpleTransactionManager;
 import org.molasdin.wbase.transaction.manager.TestResource;
+import org.molasdin.wbase.transaction.manager.TransactionManager;
 
 /**
  * Created by molasdin on 4/19/16.
  */
 public class TestInnerTransactions {
 
-    private SimpleTransactionManager txm = new SimpleTransactionManager();
+    private SimpleTransactionManager txm = new SimpleTransactionManager("KEY");
 
     @Test
     public void initialTest() throws Exception {
@@ -87,6 +89,69 @@ public class TestInnerTransactions {
                 inner.rollback();
             }
             Assert.assertTrue(tx.wasRolledBack());
+        }
+    }
+
+    @Test
+    public void checkPropagatedWithSharedResourceCommit(){
+        TransactionManager<SimpleEngine> txm2 = new SimpleTransactionManager("KEY");
+        try (UserTransaction<SimpleEngine> tx = txm.createTransaction()) {
+            try (UserTransaction<SimpleEngine> inner = txm2.createTransaction()) {
+                inner.commit();
+                Assert.assertTrue(inner.wasCommitted());
+            }
+            Assert.assertFalse(tx.wasCommitted());
+            tx.commit();
+        }
+    }
+
+    @Test
+    public void checkPropagatedWithSharedResourceRollback(){
+        TransactionManager<SimpleEngine> txm2 = new SimpleTransactionManager("KEY");
+        try (UserTransaction<SimpleEngine> tx = txm.createTransaction()) {
+            try (UserTransaction<SimpleEngine> inner = txm2.createTransaction()) {
+                inner.rollback();
+                Assert.assertTrue(inner.wasRolledBack());
+            }
+            Assert.assertTrue(tx.wasRolledBack());
+        }
+    }
+
+    @Test
+    public void checkDescriptor(){
+        TransactionManager<SimpleEngine> txm2 = new SimpleTransactionManager("KEY");
+        TransactionDescriptor descr = TransactionDescriptors.INSTANCE.propagatedOrNew();
+        try (UserTransaction<SimpleEngine> tx = txm.createTransaction(descr)) {
+            tx.context().modifyDescriptor(TransactionDescriptors.INSTANCE.alwaysNew());
+            try (UserTransaction<SimpleEngine> inner = txm2.createTransaction(TransactionDescriptors.INSTANCE.propagatedOnly())) {
+                inner.rollback();
+                Assert.assertTrue(inner.wasRolledBack());
+            }
+            tx.context().restoreDescriptor();
+            tx.commit();
+            Assert.assertTrue(tx.wasCommitted());
+        }
+    }
+
+    @Test
+    public void checkRequiredPropagation(){
+        TransactionManager<SimpleEngine> txm2 = new SimpleTransactionManager("KEY");
+        try (UserTransaction<SimpleEngine> tx = txm.createTransaction()) {
+            tx.context().modifyDescriptor(TransactionDescriptors.INSTANCE.propagatedOnly());
+            try (UserTransaction<SimpleEngine> inner = txm2.createTransaction(TransactionDescriptors.INSTANCE.alwaysNew())) {
+                inner.commit();
+                Assert.assertTrue(inner.wasCommitted());
+            }
+            tx.context().restoreDescriptor();
+            tx.commit();
+            Assert.assertTrue(tx.wasCommitted());
+        }
+    }
+
+    @Test(expected = TransactionPropagationRequiredException.class)
+    public void checkPropagationError(){
+        try (UserTransaction<SimpleEngine> tx = txm.createTransaction(TransactionDescriptors.INSTANCE.propagatedOnly())) {
+            tx.commit();
         }
     }
 }

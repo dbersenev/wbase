@@ -96,6 +96,26 @@ public class ExtendedStatement {
         return this;
     }
 
+    public ExtendedStatement setObject(int pos, Object item) {
+        try {
+            stmt.setObject(pos, item);
+            index = pos;
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+        return this;
+    }
+    public ExtendedStatement addObject(Object arg){
+        return setObjects(index, arg);
+    }
+    public ExtendedStatement setObjects(int from, Object... args) {
+        for(Object entry: args) {
+            setObject(from, entry);
+            from = from + 1;
+        }
+        return this;
+    }
+
     public ExtendedStatement reset(){
         index = 1;
         return this;

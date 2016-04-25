@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-package org.molasdin.wbase.transaction.exceptions;
+package org.molasdin.wbase;
 
 /**
- * Created by dbersenev on 21.03.2016.
+ * Created by dbersenev on 21.04.2016.
  */
-public class TransactionPropagationException extends TransactionException  {
+public interface Resource<T> extends AutoCloseable {
+    T resource();
+    default void close(){
+
+    }
 }

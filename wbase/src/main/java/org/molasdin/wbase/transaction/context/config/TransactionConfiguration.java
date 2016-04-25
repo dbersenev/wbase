@@ -22,6 +22,9 @@ import org.molasdin.wbase.transaction.context.ResourceClosure;
 import org.molasdin.wbase.transaction.context.interceptors.Interception;
 import org.molasdin.wbase.transaction.context.interceptors.InterceptionMode;
 
+import java.util.Objects;
+import java.util.function.Function;
+
 /**
  * Created by molasdin on 3/30/16.
  */
@@ -32,10 +35,14 @@ public interface TransactionConfiguration {
     <U> void bindResource(Object key, U resource, ResourceClosure<U> onClose);
     <U> void bindStableResource(Object key, U resource);
     <U> void bindStableResource(Object key, U resource, ResourceClosure<U> onClose);
+    <U> void attachProxyFunction(Object key, Class<U> resourceClass, Function<U,U> proxyMaker);
+
     TransactionDescriptor descriptor();
     boolean hasTransaction();
 
     void setUnderline(Transaction tx);
+
+    void setSyncOnResource(Object key);
 
     void setInterceptionMode(InterceptionMode mode);
 

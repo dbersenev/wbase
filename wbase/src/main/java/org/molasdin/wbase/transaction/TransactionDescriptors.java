@@ -40,6 +40,21 @@ public enum TransactionDescriptors {
         return createdWithRequirement(Requirement.ALWAYS_NEW_LINKED);
     }
 
+    public TransactionDescriptor propagatedOrNew(){
+        return createdWithRequirement(Requirement.NEW_OR_PROPAGATED);
+    }
+
+    public TransactionDescriptor propagatedOnly(){
+        return createdWithRequirement(Requirement.PROPAGATED_ONLY);
+    }
+
+    public TransactionDescriptor of(Requirement requirement, TransactionIsolation isolation){
+        BasicTransactionDescriptor descr = new BasicTransactionDescriptor();
+        descr.setRequirement(requirement);
+        descr.setIsolation(isolation);
+        return descr;
+    }
+
     private TransactionDescriptor createdWithRequirement(Requirement requirement){
         BasicTransactionDescriptor descr = new BasicTransactionDescriptor();
         descr.setRequirement(requirement);

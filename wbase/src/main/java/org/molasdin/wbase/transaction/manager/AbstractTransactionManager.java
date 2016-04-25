@@ -21,7 +21,8 @@ import org.molasdin.wbase.transaction.*;
 import org.molasdin.wbase.transaction.context.GlobalContextHolder;
 import org.molasdin.wbase.transaction.context.TransactionContext;
 import org.molasdin.wbase.transaction.context.config.UserTransactionConfiguration;
-import org.molasdin.wbase.transaction.exceptions.TransactionPropagationException;
+import org.molasdin.wbase.transaction.exceptions.TransactionException;
+import org.molasdin.wbase.transaction.exceptions.TransactionPropagationRequiredException;
 
 /**
  * Created by dbersenev on 28.10.2014.
@@ -38,6 +39,8 @@ public abstract class AbstractTransactionManager<T extends Engine> implements Tr
         if(!cfg.hasTransaction() || req.hasNewSemantics() || req.equals(Requirement.NESTED)){
             try {
                 configure(cfg);
+            }catch (TransactionException ex){
+                throw ex;
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
@@ -53,7 +56,7 @@ public abstract class AbstractTransactionManager<T extends Engine> implements Tr
 
     protected void throwIfPropagationRequired(TransactionDescriptor descr){
         if(descr.requirement().equals(Requirement.PROPAGATED_ONLY)) {
-            throw new TransactionPropagationException();
+            throw new TransactionPropagationRequiredException();
         }
     }
 }

@@ -24,19 +24,28 @@ import org.molasdin.wbase.transaction.context.interceptors.InterceptionMode;
  */
 public class SimpleTransactionManager extends AbstractTransactionManager<SimpleEngine> {
 
-    private final static String RESOURCE_KEY = "KEY";
+    private String resourceKey;
+    private String[] keys;
 
+
+    public SimpleTransactionManager(String resourceKey) {
+        this.resourceKey = resourceKey;
+        keys = new String[]{resourceKey};
+    }
 
     @Override
     protected void configure(UserTransactionConfiguration<SimpleEngine> cfg) throws Exception {
 
         TestResource resource = null;
 
-        if(cfg.descriptor().requirement().hasNewSemantics() || !cfg.hasResource(RESOURCE_KEY)) {
-            cfg.bindResource(RESOURCE_KEY, new TestResource(), (r) -> System.out.println(r.toString().concat(" closed")));
+        if(cfg.descriptor().requirement().hasNewSemantics() || !cfg.hasResource(resourceKey)) {
+            throwIfPropagationRequired(cfg.descriptor());
+            cfg.bindResource(resourceKey, new TestResource(), (r) -> System.out.println(r.toString().concat(" closed")));
+            cfg.attachProxyFunction(resourceKey, TestResource.class, (r) -> new TestResource());
+        } else {
+            cfg.setSyncOnResource(resourceKey);
         }
-        resource = cfg.resource(RESOURCE_KEY);
-        cfg.setInterceptionMode(InterceptionMode.ALL);
+        resource = cfg.resource(resourceKey);
         cfg.setUnderline(new SimpleEngine(resource), new SimpleTransaction());
         cfg.interception().addStart((e) -> System.out.println("Start"));
         cfg.interception().addPreCommit((e)->System.out.println("Pre commit"));
@@ -45,5 +54,10 @@ public class SimpleTransactionManager extends AbstractTransactionManager<SimpleE
         cfg.interception().addPostRollback((e)->System.out.println("Post rollback"));
         cfg.interception().addPreClose((e)->System.out.println("Pre close"));
         cfg.interception().addPostClose((e)->System.out.println("Post close"));
+    }
+
+    @Override
+    protected Object[] resourceKeys() {
+        return keys;
     }
 }

@@ -16,6 +16,7 @@
 
 package org.molasdin.wbase.storage.jdbc;
 
+import org.molasdin.wbase.Resource;
 import org.molasdin.wbase.storage.cursor.AbstractBatchCursor;
 
 import java.sql.ResultSet;
@@ -26,16 +27,16 @@ import java.util.Collections;
 /**
  * Created by molasdin on 12/16/15.
  */
-public class ScrollableBatchCursor<T> extends AbstractBatchCursor<T> {
+public class JdbcBatchCursor<T> extends AbstractBatchCursor<T> {
 
-    private ResultSet rs;
+    private Resource<ResultSet> rs;
     private RsTranslator<T> translator;
 
-    public ScrollableBatchCursor(ResultSet rs, long total, long pageSize, RsTranslator<T> translator) {
+    public JdbcBatchCursor(Resource<ResultSet> rs, long total, long pageSize, RsTranslator<T> translator) {
         super(pageSize, total);
         this.rs = rs;
         this.translator = translator;
-        setData(new ArrayList<>((int)pageSize));
+        setData(new ArrayList<>((int) pageSize));
     }
 
     @Override
@@ -43,8 +44,8 @@ public class ScrollableBatchCursor<T> extends AbstractBatchCursor<T> {
         try {
             data().clear();
             long dataToGet = pageSize();
-            while (dataToGet > 0 && rs.next()) {
-                data().add(translator.translate(rs));
+            while (dataToGet > 0 && rs.resource().next()) {
+                data().add(translator.translate(rs.resource()));
                 dataToGet = dataToGet - 1;
             }
             if (dataToGet > 0) {
@@ -59,10 +60,6 @@ public class ScrollableBatchCursor<T> extends AbstractBatchCursor<T> {
 
     @Override
     public void close() {
-        try {
-            rs.close();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
+        rs.close();
     }
 }
