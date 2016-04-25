@@ -75,7 +75,7 @@ try(UserTransaction<JdbcEngine> tx = tm.createTransaction()) {
 ```
 
 ```Java
-Source<Connection> source = new new DataSourceConnectionSource(dataSource);
+Source<Connection> source = new DataSourceConnectionSource(dataSource);
 TransactionManager<JdbcEngine> tm = new JdbcTransactionManager(source);
 try(UserTransaction<JdbcEngine> tx = tm.createTransaction()) {
    //even though we create new manager here, inner transaction will be mapped to the same physical one
