@@ -36,7 +36,7 @@ TransactionManager<JdbcEngine> tm = new JdbcTransactionManager(new DataSourceCon
 try(UserTransaction<JdbcEngine> tx = tm.createTransaction()){ //try with resources
    JdbcEngine e = tx.engine();
    Long someResult = e.extended(mySQLQuery).longResult();
-   tx.commit(); //if commit or receivek is omitted Tx will be rolled back on close
+   tx.commit(); //if commit or rollback is omitted Tx will be rolled back on close
 }
 ```
 
@@ -130,10 +130,10 @@ protected void configure(UserTransactionConfiguration<JdbcEngine> cfg) throws Ex
 
 private Object[] resourceKeys = new Object[] {connectionSource.key()};
 
-@Override
 //This method is used to provide resource keys for which we will recieve
 //resources with configuration when method "configure" is called
 //Can be empty
+@Override
 protected Object[] resourceKeys() {
    return resourceKeys;
 }
