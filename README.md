@@ -48,6 +48,7 @@ try(UserTransaction<JdbcEngine> tx = tm.createTransaction()) {
    try(UserTransaction<JdbcEngine> tx2 = tm.createTransaction()) {
       //only rollback is possible for this transaction
       //it is going to trigger rollback for the parent one
+      tx2.commit(); //commit must be called anyway for consistency
    }
    tx.commit(); //commit both transactions since they are mapped to the same one
 }
@@ -58,6 +59,7 @@ TransactionManager<JdbcEngine> tm = new JdbcTransactionManager(new DataSourceCon
 try(UserTransaction<JdbcEngine> tx = tm.createTransaction()) {
    //here we have independent transaction
    try(UserTransaction<JdbcEngine> tx2 = tm.createTransaction(TransactionDescriptors.ALWAYS_NEW)) {
+     //this one is going to be rolled back
    }
    tx.commit(); //commit only first one
 }
