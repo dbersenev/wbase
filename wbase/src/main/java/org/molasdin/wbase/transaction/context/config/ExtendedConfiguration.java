@@ -27,15 +27,46 @@ import java.util.Set;
 /**
  * Created by dbersenev on 06.04.2016.
  */
-public interface ExtendedConfiguration extends TransactionConfiguration{
+public interface ExtendedConfiguration extends TransactionConfiguration {
+    /**
+     * Transaction manager key
+     * @return
+     */
     Object key();
+
+    /**
+     * All resources associated with this configuration
+     * @return
+     */
     Map<Object, TransactionResource<?>> resources();
+
+    /**
+     * New or changed resource keys
+     * @return
+     */
     Set<Object> freshResources();
+
+    /**
+     * If configuration was modified
+     * @return
+     */
     boolean changed();
+
+    /**
+     * Transaction implementation
+     * @return
+     */
     Object underline();
+
+    /**
+     * Resource key on which synchronization is going to be preformed
+     * or null
+     * @return
+     */
     Object syncOnResource();
 
     @Override
     ExtendedInterception interception();
+
     Map<InterceptionMode, ExtendedInterception> interceptions();
 }

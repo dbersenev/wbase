@@ -33,20 +33,54 @@ public interface TransactionConfiguration {
     boolean hasResource(Object key);
     <U> void bindResource(Object key, U resource);
     <U> void bindResource(Object key, U resource, ResourceClosure<U> onClose);
+
     <U> void bindStableResource(Object key, U resource);
     <U> void bindStableResource(Object key, U resource, ResourceClosure<U> onClose);
+
+    /**
+     * Proxy function will be used to create some resource proxy when this configuration is applied
+     * Resource must be present for this configuration
+     * @param key - resource key
+     * @param resourceClass - class of resource
+     * @param proxyMaker - function to produce proxy
+     * @param <U>
+     */
     <U> void attachProxyFunction(Object key, Class<U> resourceClass, Function<U,U> proxyMaker);
 
     TransactionDescriptor descriptor();
+
+    /**
+     * If this configuration already has transaction retrieved by some criteria
+     * @return
+     */
     boolean hasTransaction();
 
+    /**
+     * Register transaction implementation
+     * @param tx
+     */
     void setUnderline(Transaction tx);
 
+    /**
+     * Enables resource synchronization and linking to transaction
+     * which is original creator of the resource
+     * @param key
+     */
     void setSyncOnResource(Object key);
 
+    /**
+     * Interception mode allows different application of interceptors
+     * When switched previous one is remembered (if no empty)
+     * @param mode
+     */
     void setInterceptionMode(InterceptionMode mode);
 
     Interception interception();
 
+    /**
+     * Produces eithe existing transaction (hasTransaction) or creates new one based on
+     * the specified options
+     * @return
+     */
     Transaction createTransaction();
 }

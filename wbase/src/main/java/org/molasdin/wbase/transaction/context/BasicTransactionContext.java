@@ -94,9 +94,11 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
     @Override
     public Transaction configureTransaction(ExtendedConfiguration cfg) {
         if (!isNewRequired(cfg)) {
+            //use shared transaction for the same transaction manager
             return transactions.get(cfg.key()).rollbackOnlyProxy();
         }
 
+        //if transaction implementation was attached
         if (cfg.underline() == null) {
             throw new TransactionNotConfiguredException();
         }
@@ -126,6 +128,7 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
         //interceptors configuration
         Set<ExtendedInterception> interceptionsToRemove = new HashSet<>();
         if (!cfg.interceptions().isEmpty()) {
+            //required to remove extra interception
             Interception descInt = null;
             for (InterceptionMode mode : cfg.interceptions().keySet()) {
                 ExtendedInterception tmp = cfg.interceptions().get(mode);
@@ -165,6 +168,7 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
 
         ResourcesCleanupInterceptor resCleanup = new ResourcesCleanupInterceptor(resources);
 
+        //resource key whic is used for synchronization for the same transaction
         Object syncOnRes = cfg.syncOnResource();
 
         for (Object entry : cfg.resources().keySet()) {
@@ -177,8 +181,10 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
                     resCleanup.toRemove().add(entry);
                 }
             } else {
+                //if resource for synchronization has been found
                 if (entry.equals(syncOnRes)) {
                     for (ExtendedTransaction cl : resources.get(entry).clients()) {
+                        //rollback all clients for such resource on its rollback
                         tx.interception().addPostRollback((e) -> {
                             cl.rollback();
                         });
@@ -186,6 +192,7 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
                 }
             }
 
+            //stable resources are destroyed only when all clients have been closed
             if (resources.get(entry).isStable()) {
                 resCleanup.toRemoveStable().add(entry);
             }
@@ -193,6 +200,7 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
             resources.get(entry).clients().add(tx);
         }
 
+        //all resources used by the transaction
         resCleanup.used().putAll(cfg.resources());
 
         tx.interception().addPreClose(resCleanup);
@@ -204,7 +212,7 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
         Object key = cfg.key();
 
         tx.interception().addPostClose((e) -> {
-            //detach context if last transaction is running
+            //detach context if last transaction is closing
             if (archTx == null && transactions.size() == 1 && transactions.containsKey(key)) {
                 GlobalContextHolder.setSynchronization(null);
             }

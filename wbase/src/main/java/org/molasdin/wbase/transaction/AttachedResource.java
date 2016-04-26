@@ -21,6 +21,12 @@ import org.molasdin.wbase.Resource;
 /**
  * Created by dbersenev on 21.04.2016.
  */
+
+/**
+ * Used to export some resource produced during transaction
+ * When closed transaction will be closed as well
+ * @param <T>
+ */
 public class AttachedResource<T extends AutoCloseable> implements Resource<T> {
     private T res;
     private Transaction tx;

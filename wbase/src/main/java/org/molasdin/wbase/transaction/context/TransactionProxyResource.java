@@ -22,6 +22,11 @@ import java.util.function.Function;
 /**
  * Created by dbersenev on 21.04.2016.
  */
+
+/**
+ * Proxy resource is used for synchronization on the same resource
+ * @param <T>
+ */
 public class TransactionProxyResource<T> implements TransactionResource<T> {
 
     private TransactionResource<T> original;

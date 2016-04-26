@@ -24,6 +24,11 @@ import org.molasdin.wbase.transaction.manager.Engine;
 /**
  * Created by molasdin on 3/29/16.
  */
+
+/**
+ * Same as parent but introduces engine support
+ * @param <T>
+ */
 public class ExtendedUserTransaction<T extends Engine> extends ExtendedTransaction implements UserTransaction<T> {
 
     protected static class UserTransactionProxy<U extends Engine> extends TransactionProxy implements UserTransaction<U>{

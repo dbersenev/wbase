@@ -30,6 +30,10 @@ import java.util.function.Consumer;
 /**
  * Created by molasdin on 3/19/16.
  */
+
+/**
+ * Wrapper for transactions which introduces events and better control over transaction
+ */
 public class ExtendedTransaction extends DelegatingTransaction {
 
     private ExtendedInterception interception = new ExtendedInterception();
@@ -41,6 +45,9 @@ public class ExtendedTransaction extends DelegatingTransaction {
     private TransactionProxy rollbackOnlyProxy = null;
     private boolean closed = false;
 
+    /**
+     * Class used to represent proxy for inner transaction of the same manager
+     */
     protected static class TransactionProxy extends AbstractTransaction {
         private ExtendedTransaction tx = null;
 
@@ -83,6 +90,10 @@ public class ExtendedTransaction extends DelegatingTransaction {
             this.tx = null;
         }
 
+        /**
+         * Allows to reuse same instance
+         * @param outer
+         */
         void restore(ExtendedTransaction outer) {
             if (outer.wasRolledBack()) {
                 throw new TransactionRolledBackException();

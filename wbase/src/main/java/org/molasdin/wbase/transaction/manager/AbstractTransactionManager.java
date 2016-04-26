@@ -36,6 +36,9 @@ public abstract class AbstractTransactionManager<T extends Engine> implements Tr
         TransactionContext ctx = GlobalContextHolder.context();
         UserTransactionConfiguration<T> cfg = ctx.newUserTransactionConfiguration(this, descriptor, resourceKeys());
         Requirement req = cfg.descriptor().requirement();
+        /**
+         * Modify configuration only for new transactions
+         */
         if(!cfg.hasTransaction() || req.hasNewSemantics() || req.equals(Requirement.NESTED)){
             try {
                 configure(cfg);
@@ -48,6 +51,10 @@ public abstract class AbstractTransactionManager<T extends Engine> implements Tr
         return cfg.createTransaction();
     }
 
+    /**
+     * Provides keys for resources requested by the specific transaction manager
+     * @return
+     */
     protected Object[] resourceKeys() {
         return EMPTY_ARRAY;
     }

@@ -22,6 +22,15 @@ import org.molasdin.wbase.transaction.TransactionDescriptor;
  * Created by dbersenev on 21.03.2016.
  */
 public interface UserTransactionContext {
+    /**
+     * Modify current descriptor which will be applied to all inner transactions
+     * @param descriptor
+     */
     void modifyDescriptor(TransactionDescriptor descriptor);
+
+    /**
+     * Restore modified descriptor
+     * Modified descriptors are stored in stack like manner
+     */
     void restoreDescriptor();
 }
