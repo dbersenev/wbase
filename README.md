@@ -85,7 +85,7 @@ try(UserTransaction<JdbcEngine> tx = tm.createTransaction()) {
    //it happens because we synchronize on the same source and requirement is "NEW_OR_PROPAGATED"
    TransactionManager<JdbcEngine> tm2 = new JdbcTransactionManager(source);
    try(UserTransaction<JdbcEngine> tx2 = tm2.createTransaction()) {
-     tx2.commit();// so commit here is doing nothing. Only rollback can be called
+     tx2.commit();// so commit here is doing nothing. Only rollback can affect physical transaction
    }
 }
 ```
