@@ -36,7 +36,7 @@ TransactionManager<JdbcEngine> tm = new JdbcTransactionManager(new DataSourceCon
 try(UserTransaction<JdbcEngine> tx = tm.createTransaction()){ //try with resources
    JdbcEngine e = tx.engine();
    Long someResult = e.extended(mySQLQuery).longResult();
-   tx.commit(); //if commit or rollback is omitted Tx will be rolled back on close
+   tx.commit(); //if commit or receivek is omitted Tx will be rolled back on close
 }
 ```
 
@@ -87,3 +87,52 @@ try(UserTransaction<JdbcEngine> tx = tm.createTransaction()) {
    }
 }
 ```
+
+**Lets see how managers are created (based on JdbcTransactionManager)**
+
+```Java
+@Override
+protected void configure(UserTransactionConfiguration<JdbcEngine> cfg) throws Exception {
+    Object key = connectionSource.key();
+    if (!cfg.hasResource(key) || cfg.descriptor().requirement().hasNewSemantics()) {
+        throwIfPropagationRequired(cfg.descriptor());
+        //First step is binding some resource (if one is absent)
+        //Here we have optional close action (Connection::close)
+        cfg.bindResource(key, connectionSource.value(), Connection::close);
+        //Proxy function creates proxy for resource which is shared between different managers
+        //and synchronized on
+        cfg.attachProxyFunction(key, Connection.class, ProtectedConnection::new);
+        ...
+    } else {
+        //When we already have resource within "cfg"
+        //we need to tell "cfg" that we are synchronizing on the resource with some key
+        //It is done so to tell our context we need to link this transaction to the existing one
+        //which produced this resource
+        cfg.setSyncOnResource(key);
+    }
+    //Now we can retrieve resource
+    //It must be done even if we are creating this resource in the same run
+    //because some mangers may use resource processors and here we may get some proxy
+    Connection connection = cfg.resource(key);
+    ...
+    //Now we can do some adjustments to our connection and create transaction implementation with
+    //the engine
+    JdbcEngine engine = new JdbcEngine(connection);
+    ...
+    Transaction tx = new JdbcTransaction(...);
+    //And now we can set Transaction implementation and register interceptor to close
+    //engine when transaction is closed
+    cfg.setUnderline(engine, tx);
+    cfg.interception().addPreClose((e) -> engine.close());
+}
+
+private Object[] resourceKeys = new Object[] {connectionSource.key()};
+
+@Override
+//This method is used to provide resource keys for which we will recieve
+//resources with configuration when method "configure" is called
+//Can be empty
+protected Object[] resourceKeys() {
+   return resourceKeys;
+}
+

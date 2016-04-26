@@ -32,9 +32,16 @@ import java.sql.Savepoint;
 public class JdbcTransactionManager extends AbstractTransactionManager<JdbcEngine> {
 
     private Source<Connection> connectionSource;
+    private Object[] resourceKeys;
 
     public JdbcTransactionManager(Source<Connection> connectionSource) {
         this.connectionSource = connectionSource;
+        resourceKeys = new Object[] {connectionSource.key()};
+    }
+
+    @Override
+    protected Object[] resourceKeys() {
+        return resourceKeys;
     }
 
     @Override
