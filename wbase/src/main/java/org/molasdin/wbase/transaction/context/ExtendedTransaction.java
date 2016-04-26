@@ -16,10 +16,12 @@
 
 package org.molasdin.wbase.transaction.context;
 
+import org.molasdin.wbase.transaction.AbstractTransaction;
 import org.molasdin.wbase.transaction.DelegatingTransaction;
 import org.molasdin.wbase.transaction.Transaction;
 import org.molasdin.wbase.transaction.context.interceptors.*;
 import org.molasdin.wbase.transaction.exceptions.TransactionCommittedException;
+import org.molasdin.wbase.transaction.exceptions.TransactionInactiveException;
 import org.molasdin.wbase.transaction.exceptions.TransactionRolledBackException;
 
 import java.util.*;
@@ -36,10 +38,10 @@ public class ExtendedTransaction extends DelegatingTransaction {
     private BasicTerminatableTransactionEvent terminatableEvent = null;
     private TransactionEvent commonEvent = null;
 
-    private Transaction rollbackOnlyProxy = null;
+    private TransactionProxy rollbackOnlyProxy = null;
     private boolean closed = false;
 
-    private static class TransactionProxy implements Transaction {
+    protected static class TransactionProxy extends AbstractTransaction {
         private ExtendedTransaction tx = null;
 
         public TransactionProxy(ExtendedTransaction tx) {
@@ -48,12 +50,21 @@ public class ExtendedTransaction extends DelegatingTransaction {
 
         @Override
         public UserTransactionContext context() {
+            throwIfInactive();
             return tx.context();
         }
 
         @Override
         public void rollback() {
+            throwIfInactive();
+            super.rollback();
             tx.rollback();
+        }
+
+        @Override
+        public void commit() {
+            throwIfInactive();
+            super.commit();
         }
 
         @Override
@@ -63,7 +74,31 @@ public class ExtendedTransaction extends DelegatingTransaction {
 
         @Override
         public void close() {
+            if (tx == null) {
+                return;
+            }
+            if (!wasCommitted() && !wasRolledBack()) {
+                rollback();
+            }
             this.tx = null;
+        }
+
+        void restore(ExtendedTransaction outer) {
+            if (outer.wasRolledBack()) {
+                throw new TransactionRolledBackException();
+            }
+            this.tx = outer;
+            setCommitted(false);
+        }
+
+        boolean isInactive() {
+            return tx == null;
+        }
+
+        private void throwIfInactive() {
+            if (tx == null) {
+                throw new TransactionInactiveException();
+            }
         }
     }
 
@@ -72,7 +107,7 @@ public class ExtendedTransaction extends DelegatingTransaction {
         this.ctx = ctx;
     }
 
-    public boolean isClosed(){
+    public boolean isClosed() {
         return closed;
     }
 
@@ -86,17 +121,13 @@ public class ExtendedTransaction extends DelegatingTransaction {
 
     @Override
     public void commit() {
-        if (wasCommitted()) {
-            throw new TransactionCommittedException();
-        }
-        if(wasRolledBack()) {
-            throw new TransactionRolledBackException();
-        }
+        checkStatus();
         interception.emitPreCommit(terminatableEvent());
         if (!terminatableEvent.isTerminated()) {
             super.commit();
             interception.emitPostCommit(commonEvent());
         }
+        removeProxy();
     }
 
     @Override
@@ -106,22 +137,18 @@ public class ExtendedTransaction extends DelegatingTransaction {
 
     @Override
     public void rollback() {
-        if (wasRolledBack()) {
-            throw new TransactionRolledBackException();
-        }
-        if(wasCommitted()) {
-            throw new TransactionCommittedException();
-        }
+        checkStatus();
         interception.emitPreRollback(terminatableEvent());
         if (!terminatableEvent.isTerminated()) {
             super.rollback();
             interception.emitPostRollback(commonEvent());
         }
+        removeProxy();
     }
 
     @Override
     public void close() {
-        if(!isClosed()){
+        if (!isClosed()) {
             closed = true;
             if (!(wasCommitted() || wasRolledBack())) {
                 this.rollback();
@@ -129,20 +156,24 @@ public class ExtendedTransaction extends DelegatingTransaction {
             interception.emitPreClose(commonEvent());
             super.close();
             interception.emitPostClose(commonEvent());
-            if (rollbackOnlyProxy != null) {
-                rollbackOnlyProxy.close();
-                rollbackOnlyProxy = null;
-            }
+            removeProxy();
             interception = null;
             ctx = null;
         }
     }
 
     public Transaction rollbackOnlyProxy() {
+        checkStatus();
         if (!closed && rollbackOnlyProxy == null) {
-            rollbackOnlyProxy = new TransactionProxy(this);
+            rollbackOnlyProxy = prepareProxy();
+        } else if (rollbackOnlyProxy != null && rollbackOnlyProxy.isInactive()) {
+            rollbackOnlyProxy.restore(this);
         }
         return rollbackOnlyProxy;
+    }
+
+    TransactionProxy prepareProxy() {
+        return new TransactionProxy(this);
     }
 
     private TransactionEvent commonEvent() {
@@ -160,6 +191,22 @@ public class ExtendedTransaction extends DelegatingTransaction {
             terminatableEvent.resetTerminated();
         }
         return terminatableEvent;
+    }
+
+    private void checkStatus() {
+        if (wasRolledBack()) {
+            throw new TransactionRolledBackException();
+        }
+        if (wasCommitted()) {
+            throw new TransactionCommittedException();
+        }
+    }
+
+    private void removeProxy(){
+        if(rollbackOnlyProxy != null) {
+            rollbackOnlyProxy.close();
+        }
+        rollbackOnlyProxy = null;
     }
 
 }

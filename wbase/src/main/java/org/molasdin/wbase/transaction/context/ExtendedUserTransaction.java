@@ -26,26 +26,12 @@ import org.molasdin.wbase.transaction.manager.Engine;
  */
 public class ExtendedUserTransaction<T extends Engine> extends ExtendedTransaction implements UserTransaction<T> {
 
-    private static class TransactionProxy<U extends Engine> implements UserTransaction<U> {
+    protected static class UserTransactionProxy<U extends Engine> extends TransactionProxy implements UserTransaction<U>{
         private ExtendedUserTransaction<U> tx = null;
 
-        public TransactionProxy(ExtendedUserTransaction<U> tx) {
+        public UserTransactionProxy(ExtendedUserTransaction<U> tx) {
+            super(tx);
             this.tx = tx;
-        }
-
-        @Override
-        public UserTransactionContext context() {
-            return tx.context();
-        }
-
-        @Override
-        public void rollback() {
-            tx.rollback();
-        }
-
-        @Override
-        public boolean wasRolledBack() {
-            return tx.wasRolledBack();
         }
 
         @Override
@@ -55,13 +41,12 @@ public class ExtendedUserTransaction<T extends Engine> extends ExtendedTransacti
 
         @Override
         public void close() {
-            tx = null;
+            super.close();
+            this.tx = null;
         }
     }
 
     private T engine;
-
-    private UserTransaction<T> rollbackOnlyProxy = null;
 
     public ExtendedUserTransaction(Transaction tx, T engine, UserTransactionContext ctx) {
         super(tx, ctx);
@@ -73,19 +58,13 @@ public class ExtendedUserTransaction<T extends Engine> extends ExtendedTransacti
         return engine;
     }
 
-    @Override
-    public void close() {
-        super.close();
-        if(rollbackOnlyProxy != null){
-            rollbackOnlyProxy.close();
-            rollbackOnlyProxy = null;
-        }
+    @SuppressWarnings("unchecked")
+    public UserTransaction<T> rollbackOnlyProxy(){
+        return (UserTransaction<T>)super.rollbackOnlyProxy();
     }
 
-    public UserTransaction<T> rollbackOnlyProxy(){
-        if(!isClosed() && rollbackOnlyProxy == null){
-            rollbackOnlyProxy =  new TransactionProxy<>(this);
-        }
-        return rollbackOnlyProxy;
+    @Override
+    TransactionProxy prepareProxy() {
+        return new UserTransactionProxy<>(this);
     }
 }

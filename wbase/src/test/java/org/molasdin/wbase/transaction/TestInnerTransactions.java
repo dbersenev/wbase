@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.molasdin.wbase.transaction.context.ExtendedUserTransaction;
 import org.molasdin.wbase.transaction.context.GlobalContextHolder;
 import org.molasdin.wbase.transaction.exceptions.TransactionPropagationRequiredException;
+import org.molasdin.wbase.transaction.exceptions.TransactionRolledBackException;
 import org.molasdin.wbase.transaction.manager.SimpleEngine;
 import org.molasdin.wbase.transaction.manager.SimpleTransactionManager;
 import org.molasdin.wbase.transaction.manager.TestResource;
@@ -39,6 +40,7 @@ public class TestInnerTransactions {
             Assert.assertEquals(ExtendedUserTransaction.class, tx.getClass());
             try (UserTransaction<SimpleEngine> inner = txm.createTransaction()) {
                 Assert.assertEquals(tx.engine(), inner.engine());
+                inner.commit();
             }
             tx.commit();
         }
@@ -67,6 +69,7 @@ public class TestInnerTransactions {
             try (UserTransaction<SimpleEngine> inner = txm.createTransaction()) {
                 Assert.assertEquals(tx.engine(), inner.engine());
                 Assert.assertEquals(res, inner.engine().resource());
+                inner.commit();
             }
             tx.commit();
         }
@@ -148,10 +151,55 @@ public class TestInnerTransactions {
         }
     }
 
+    @Test
+    public void checkCloseForPropagated() {
+        try (UserTransaction<SimpleEngine> tx = txm.createTransaction()) {
+            try (UserTransaction<SimpleEngine> inner = txm.createTransaction()) {
+            }
+            Assert.assertTrue(tx.wasRolledBack());
+        }
+    }
+
+    @Test
+    public void checkCloseForPropagatedCommitted() {
+        try (UserTransaction<SimpleEngine> tx = txm.createTransaction()) {
+            try (UserTransaction<SimpleEngine> inner = txm.createTransaction()) {
+                inner.commit();
+            }
+            Assert.assertFalse(tx.wasRolledBack());
+        }
+    }
+
     @Test(expected = TransactionPropagationRequiredException.class)
     public void checkPropagationError(){
         try (UserTransaction<SimpleEngine> tx = txm.createTransaction(TransactionDescriptors.PROPAGATED_ONLY)) {
             tx.commit();
+        }
+    }
+
+    @Test
+    public void checkTransactionProxyStability(){
+        try (UserTransaction<SimpleEngine> tx = txm.createTransaction()) {
+            try (UserTransaction<SimpleEngine> inner = txm.createTransaction()) {
+                inner.commit();
+            }
+            try (UserTransaction<SimpleEngine> inner = txm.createTransaction()) {
+                inner.commit();
+            }
+            tx.commit();
+        }
+    }
+
+    @Test(expected = TransactionRolledBackException.class)
+    public void checkRolledBackOuter(){
+        try (UserTransaction<SimpleEngine> tx = txm.createTransaction()) {
+            try (UserTransaction<SimpleEngine> inner = txm.createTransaction()) {
+                inner.commit();
+            }
+            tx.rollback();
+            try (UserTransaction<SimpleEngine> inner = txm.createTransaction()) {
+                inner.commit();
+            }
         }
     }
 }

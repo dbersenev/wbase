@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 
 
-public interface Repository<T, K extends Serializable>{
+public interface Repository<T, K>{
     Optional<T> byId(K id);
     void save(T o);
     void update(T o);

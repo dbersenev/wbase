@@ -52,24 +52,15 @@ public class BasicTransactionRunner<T extends Engine> implements TransactionRunn
 
     @Override
     public <U> U call(Transactional<T, U> transactional) {
-        try {
-            UserTransaction<T> transaction = newTransaction();
-            try {
+            try (UserTransaction<T> transaction = newTransaction()){
                 U result = transactional.run(transaction);
                 transaction.commit();
                 return result;
             } catch (TransactionInterruptedException ex) {
-                transaction.rollback();
                 return null;
             } catch (Exception ex) {
-                transaction.rollback();
-                throw ex;
-            } finally {
-                transaction.close();
+                throw new RuntimeException(ex);
             }
-        } catch (Exception ex){
-            throw new RuntimeException(ex);
-        }
     }
 
     @Override
