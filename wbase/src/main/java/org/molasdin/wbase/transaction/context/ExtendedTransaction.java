@@ -160,16 +160,22 @@ public class ExtendedTransaction extends DelegatingTransaction {
     @Override
     public void close() {
         if (!isClosed()) {
-            closed = true;
-            if (!(wasCommitted() || wasRolledBack())) {
-                this.rollback();
+            try {
+                if (!(wasCommitted() || wasRolledBack())) {
+                    this.rollback();
+                }
+            } finally {
+                try {
+                    interception.emitPreClose(commonEvent());
+                    super.close();
+                    interception.emitPostClose(commonEvent());
+                } finally {
+                    closed = true;
+                    removeProxy();
+                    interception = null;
+                    ctx = null;
+                }
             }
-            interception.emitPreClose(commonEvent());
-            super.close();
-            interception.emitPostClose(commonEvent());
-            removeProxy();
-            interception = null;
-            ctx = null;
         }
     }
 
