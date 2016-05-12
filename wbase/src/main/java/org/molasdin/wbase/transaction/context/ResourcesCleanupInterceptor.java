@@ -88,13 +88,17 @@ class ResourcesCleanupInterceptor implements Interceptor<TransactionEvent> {
             if (toRemove.contains(entry)) {
                 try {
                     for (ExtendedTransaction t : tr.clients()) {
+                        //do not close current transaction (resource has reference to all transactions
+                        //where it is used )
                         if (t.equals(e.currentTransaction())) {
                             resources.remove(entry);
                         } else {
+                            //close dependent transactions
                             t.close();
                         }
                     }
                 } finally {
+                    //close resource
                     tr.close();
                 }
 

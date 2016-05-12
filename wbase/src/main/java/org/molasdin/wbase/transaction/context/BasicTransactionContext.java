@@ -203,7 +203,7 @@ public class BasicTransactionContext implements TransactionContext, Configuratio
         //all resources used by the transaction
         resCleanup.used().putAll(cfg.resources());
 
-        tx.interception().addPreClose(resCleanup);
+        tx.interception().addPostClose(resCleanup);
 
         //retrieve transaction identified by the same key
         ExtendedTransaction archTx = cfg.hasTransaction() ? transactions.get(cfg.key()) : null;
